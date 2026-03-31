@@ -676,12 +676,12 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 <div class="sf" id="sf"></div>
 
 <!-- SIDEBAR OVERLAY (mobile) -->
-<div id="sb-overlay" onclick="closeSidebar()"></div>
+<div id="sb-overlay" onclick="closeSidebar()" style="touch-action:none"></div>
 
 <div id="app">
   <!-- ══ SIDEBAR ══ -->
   <aside class="sidebar" id="sidebar">
-    <div class="sb-logo">
+    <div class="sb-logo" onclick="event.stopPropagation()">
       <div class="sb-moon">✦</div>
       <div>
         <div class="sb-title">AureliaInk</div>
@@ -695,12 +695,12 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <div id="sr"></div>
     </div>
 
-    <div class="sb-body">
+    <div class="sb-body" onclick="event.stopPropagation()">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 4px">
         <span class="sec-lbl" style="padding:0">Folders</span>
         <button onclick="openNewFolder()" style="background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:6px;color:var(--gold);cursor:pointer;font-size:10px;padding:2px 8px;font-family:var(--font-u)">&#xFF0B; New</button>
       </div>
-      <div class="fi active" data-f="all" id="fi-all" onclick="flt(this)">
+      <div class="fi active" data-f="all" id="fi-all" onclick="flt(this,event)">
         <span class="fi-ico">&#x1F4DA;</span><span class="fi-name">All Notebooks</span><span class="fi-cnt" id="ca">0</span>
       </div>
       <div id="folder-list"></div>
@@ -726,7 +726,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
     </div>
 
     <button class="qn-trig" onclick="toggleQN()">⚡ Quick Note</button>
-    <div class="sb-foot">
+    <div class="sb-foot" onclick="event.stopPropagation()">
       <button class="sb-fbt" title="Upload PNG artwork" onclick="openArtUpload()">🖼</button>
       <button class="sb-fbt" title="Cloud Sync" onclick="openSyncModal()" id="sb-sync-btn" style="position:relative">
         ☁️<span id="sb-sync-dot" style="position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:#666;border:1px solid rgba(0,0,0,.3)"></span>
@@ -1213,6 +1213,11 @@ function closeSidebar(){
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sb-overlay').classList.remove('show');
 }
+// Stop clicks inside the sidebar from bubbling to the overlay
+document.addEventListener('DOMContentLoaded',()=>{
+  const sb=document.getElementById('sidebar');
+  if(sb)sb.addEventListener('click',e=>e.stopPropagation());
+});
 
 /* ═══════ STORAGE ═══════ */
 function save(){
@@ -1550,7 +1555,7 @@ function renderFolders(){
     // Long-press on mobile
     let pt; el.addEventListener('touchstart',()=>{pt=setTimeout(()=>el.querySelector('.fi-folder-actions').style.display='flex',600)},{passive:true});
     el.addEventListener('touchend',()=>clearTimeout(pt),{passive:true});
-    el.addEventListener('click',()=>flt(el));
+    el.addEventListener('click',(e)=>{e.stopPropagation();flt(el,e);});
     list.appendChild(el);
   });
   // Keep actions visible on active folder
@@ -1558,7 +1563,8 @@ function renderFolders(){
   if(active)active.querySelector('.fi-folder-actions').style.display='flex';
 }
 
-function flt(el){
+function flt(el,e){
+  if(e)e.stopPropagation();
   document.querySelectorAll('.fi').forEach(f=>{
     f.classList.remove('active');
     const a=f.querySelector('.fi-folder-actions');
