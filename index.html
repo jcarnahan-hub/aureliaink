@@ -1233,8 +1233,8 @@ function save(){
     localStorage.setItem('ai_folders',JSON.stringify(S.folders));
     try{localStorage.setItem('ai_col',JSON.stringify(S.collections));}catch(e){}
   }catch(e){}
-  // Auto-push to Firebase (debounced 3s after last change)
-  if(typeof fbSyncDebounced==='function')fbSyncDebounced();
+  // NOTE: Firebase sync is triggered separately via fbSyncDebounced()
+  // NOT here — to avoid save() loops
 }
 function load(){
   try{
@@ -2395,12 +2395,19 @@ function fbStartListener(){
 
     // Genuine new remote data — apply it
     fbLastAppliedTs=remoteTs;
+    window._applyingRemoteData=true; // flag to prevent echo
     if(data.notebooks)S.notebooks=data.notebooks;
     if(data.quickNotes)S.quickNotes=data.quickNotes;
     if(data.folders)S.folders=data.folders;
-    save();
+    // Save to localStorage only — do NOT push back to Firebase
+    try{
+      localStorage.setItem('ai_nb',JSON.stringify(S.notebooks));
+      localStorage.setItem('ai_qn',JSON.stringify(S.quickNotes));
+      localStorage.setItem('ai_folders',JSON.stringify(S.folders));
+    }catch(e){}
     renderFolders();renderShelf(S.folder==='all'?null:S.folder);
     renderQNList();updateCounts();
+    window._applyingRemoteData=false;
 
     // Only show toast for genuine cross-device syncs, not initial load
     if(!firstSnapshot){
@@ -2418,6 +2425,7 @@ function fbStartListener(){
 let fbSyncTimer=null;
 function fbSyncDebounced(){
   if(!fbUser||!fbConfigured)return;
+  if(window._applyingRemoteData)return; // don't push while receiving
   clearTimeout(fbSyncTimer);
   fbSyncTimer=setTimeout(()=>fbPush(),3000);
   const dot=document.getElementById('sb-sync-dot');
@@ -2774,6 +2782,7 @@ window.autoSave=function(){
     localStorage.setItem('ai_folders',JSON.stringify(S.folders));
     try{localStorage.setItem('ai_col',JSON.stringify(S.collections));}catch(e){}
   }catch(e){}
+  // Trigger Firebase sync debounced (only from here, not from save())
   if(typeof fbSyncDebounced==='function')fbSyncDebounced();
   const lbl=document.getElementById('sync-lbl');
   if(lbl){lbl.textContent='Saving…';
