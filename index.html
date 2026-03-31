@@ -80,8 +80,18 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 }
 
 /* Sidebar overlay */
-#sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;
-  display:none;backdrop-filter:blur(2px)}
+#sb-overlay{
+  position:fixed;
+  top:0;
+  left:300px;  /* starts AFTER the sidebar — can never cover it */
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,.5);
+  z-index:99;
+  display:none;
+  backdrop-filter:blur(2px);
+  -webkit-tap-highlight-color:transparent;
+}
 #sb-overlay.show{display:block}
 
 .sb-logo{padding:18px 18px 12px;border-bottom:1px solid rgba(201,168,76,.15);
@@ -681,7 +691,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 <div id="app">
   <!-- ══ SIDEBAR ══ -->
   <aside class="sidebar" id="sidebar">
-    <div class="sb-logo" onclick="event.stopPropagation()">
+    <div class="sb-logo">
       <div class="sb-moon">✦</div>
       <div>
         <div class="sb-title">AureliaInk</div>
@@ -695,7 +705,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <div id="sr"></div>
     </div>
 
-    <div class="sb-body" onclick="event.stopPropagation()">
+    <div class="sb-body">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 4px">
         <span class="sec-lbl" style="padding:0">Folders</span>
         <button onclick="openNewFolder()" style="background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:6px;color:var(--gold);cursor:pointer;font-size:10px;padding:2px 8px;font-family:var(--font-u)">&#xFF0B; New</button>
@@ -726,7 +736,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
     </div>
 
     <button class="qn-trig" onclick="toggleQN()">⚡ Quick Note</button>
-    <div class="sb-foot" onclick="event.stopPropagation()">
+    <div class="sb-foot">
       <button class="sb-fbt" title="Upload PNG artwork" onclick="openArtUpload()">🖼</button>
       <button class="sb-fbt" title="Cloud Sync" onclick="openSyncModal()" id="sb-sync-btn" style="position:relative">
         ☁️<span id="sb-sync-dot" style="position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:#666;border:1px solid rgba(0,0,0,.3)"></span>
@@ -1213,11 +1223,7 @@ function closeSidebar(){
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sb-overlay').classList.remove('show');
 }
-// Stop clicks inside the sidebar from bubbling to the overlay
-document.addEventListener('DOMContentLoaded',()=>{
-  const sb=document.getElementById('sidebar');
-  if(sb)sb.addEventListener('click',e=>e.stopPropagation());
-});
+
 
 /* ═══════ STORAGE ═══════ */
 function save(){
