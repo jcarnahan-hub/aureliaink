@@ -209,10 +209,9 @@ body.light-theme .add-nb{
 }
 /* Theme toggle button */
 .theme-toggle{
-  position:fixed;top:8px;right:60px;z-index:300;
   background:transparent;border:none;cursor:pointer;
-  font-size:18px;padding:6px;border-radius:8px;
-  transition:transform .3s;
+  font-size:20px;padding:4px 6px;border-radius:8px;
+  transition:transform .3s;flex-shrink:0;
   -webkit-tap-highlight-color:transparent;
   line-height:1;
 }
@@ -735,6 +734,45 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(201,168,76,.16);border-radius:2px}
 
+/* ══ ARTWORK LIBRARY ══ */
+.lib-collection{margin-bottom:14px}
+.lib-col-header{display:flex;align-items:center;gap:8px;padding:6px 0;
+  border-bottom:1px solid rgba(201,168,76,.1);margin-bottom:8px;}
+.lib-col-name{font-family:var(--font-d);font-size:14px;color:var(--gold);flex:1}
+.lib-col-count{font-size:10px;color:rgba(201,168,76,.4);font-family:var(--font-u)}
+.lib-col-btn{background:none;border:1px solid rgba(201,168,76,.2);border-radius:6px;
+  color:rgba(201,168,76,.5);cursor:pointer;font-size:10px;padding:2px 8px;
+  font-family:var(--font-u);transition:all .15s}
+.lib-col-btn:hover{background:rgba(201,168,76,.1);color:var(--gold)}
+.lib-col-btn.danger{border-color:rgba(212,132,122,.3);color:rgba(212,132,122,.6)}
+.lib-col-btn.danger:hover{background:rgba(212,132,122,.1);color:var(--rose)}
+.lib-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lib-img-wrap{position:relative;aspect-ratio:3/4;border-radius:5px;overflow:hidden;
+  border:2px solid transparent;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.05)}
+.lib-img-wrap:hover{border-color:rgba(201,168,76,.4);transform:scale(1.03)}
+.lib-img-wrap.selected{border-color:var(--gold)}
+.lib-img-wrap img{width:100%;height:100%;object-fit:cover}
+.lib-img-del{position:absolute;top:3px;right:3px;background:rgba(17,16,9,.85);
+  border:none;border-radius:4px;color:rgba(212,132,122,.8);cursor:pointer;
+  font-size:10px;padding:2px 5px;opacity:0;transition:opacity .15s}
+.lib-img-wrap:hover .lib-img-del{opacity:1}
+.lib-img-num{position:absolute;bottom:0;left:0;right:0;
+  background:rgba(0,0,0,.55);color:rgba(255,255,255,.7);
+  font-size:8px;text-align:center;padding:2px;font-family:var(--font-u)}
+.lib-add-col{border:2px dashed rgba(201,168,76,.25);border-radius:8px;
+  padding:10px;text-align:center;cursor:pointer;color:rgba(201,168,76,.4);
+  font-size:12px;transition:all .2s;margin-bottom:12px}
+.lib-add-col:hover{border-color:rgba(201,168,76,.5);color:rgba(201,168,76,.7);
+  background:rgba(201,168,76,.04)}
+.lib-uncollected{margin-bottom:14px}
+/* Library modal tabs */
+.lib-tabs{display:flex;gap:0;margin-bottom:14px;border-radius:8px;
+  overflow:hidden;border:1px solid rgba(201,168,76,.2)}
+.lib-tab{flex:1;padding:8px;background:transparent;border:none;
+  color:rgba(201,168,76,.5);cursor:pointer;font-family:var(--font-u);
+  font-size:12px;font-weight:500;transition:all .2s}
+.lib-tab.active{background:rgba(201,168,76,.15);color:var(--gold)}
+
 /* ── FLOATING BACK BUTTON ── */
 #float-back{
   position:fixed;
@@ -969,8 +1007,14 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <div id="folder-list"></div>
 
       <div class="sb-div" style="margin-top:8px"></div>
-      <div class="sec-lbl">🖼 Page Artwork</div>
-      <div id="col-list"><div style="padding:5px 15px 10px;font-size:11px;color:rgba(201,168,76,.3)">Upload PNG artwork per notebook</div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 15px 4px">
+        <span class="sec-lbl" style="padding:0;margin:0">🖼 Artwork Library</span>
+        <button onclick="openLibrary()" style="background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);
+          border-radius:6px;color:var(--gold);cursor:pointer;font-size:10px;padding:2px 8px;
+          font-family:var(--font-u)">Open ✦</button>
+      </div>
+      <div id="col-list"><div style="padding:5px 15px 10px;font-size:11px;color:rgba(201,168,76,.3)">
+        Tap Open to manage your artwork library</div></div>
 
       <div class="sb-div"></div>
       <div class="sec-lbl" style="padding-bottom:3px">Quick Templates</div>
@@ -990,7 +1034,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 
     <button class="qn-trig" onclick="toggleQN()">⚡ Quick Note</button>
     <div class="sb-foot">
-      <button class="sb-fbt" title="Upload PNG artwork" onclick="openArtUpload()">🖼</button>
+      <button class="sb-fbt" title="Artwork Library" onclick="openLibrary()">🖼</button>
       <button class="sb-fbt" title="Cloud Sync" onclick="openSyncModal()" id="sb-sync-btn" style="position:relative">
         ☁️<span id="sb-sync-dot" style="position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:#666;border:1px solid rgba(0,0,0,.3)"></span>
       </button>
@@ -1009,8 +1053,8 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <div class="sync-dot"></div>
         <span id="sync-lbl">Synced</span>
       </div>
-      <div class="dt-badge" id="dt-badge"></div>
       <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Switch theme">🌙</button>
+      <div class="dt-badge" id="dt-badge"></div>
     </div>
 
     <!-- SHELF -->
@@ -1257,6 +1301,97 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
     <div class="modal-foot">
       <button class="btn-cxl" onclick="closeM('m-art')">Cancel</button>
       <button class="btn-pri" id="art-apply-btn" onclick="applyArt()">Apply Pack ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- ARTWORK LIBRARY MODAL -->
+<div class="modal-ov" id="m-library">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">🖼 Artwork Library</div>
+
+    <!-- Tabs: Library | Apply to Notebook -->
+    <div class="lib-tabs">
+      <button class="lib-tab active" id="lib-tab-browse" onclick="switchLibTab('browse',this)">Browse Library</button>
+      <button class="lib-tab" id="lib-tab-apply"  onclick="switchLibTab('apply',this)">Apply to Notebook</button>
+    </div>
+
+    <!-- BROWSE TAB -->
+    <div id="lib-browse-panel">
+      <!-- Add new collection -->
+      <div class="lib-add-col" onclick="addLibCollection()">
+        ＋ New Collection (e.g. "Turtle Pack", "Book Theme")
+      </div>
+
+      <!-- Upload images — multiple, no limit -->
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div class="up-drop" id="lib-drop" onclick="document.getElementById('lib-file').click()"
+          style="flex:1;height:52px;margin-bottom:0">
+          <div class="u-ico" style="font-size:16px">＋</div>
+          <p id="lib-drop-lbl" style="font-size:11px">Add images to library</p>
+        </div>
+        <select id="lib-upload-target" class="modal-inp"
+          style="width:140px;margin-bottom:0;font-size:11px">
+          <option value="">No collection</option>
+        </select>
+      </div>
+      <input type="file" id="lib-file" multiple
+        accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
+        style="position:fixed;top:-999px;left:-999px;opacity:0;width:1px;height:1px"
+        onchange="handleLibUpload(event)">
+
+      <!-- Library content -->
+      <div id="lib-content" style="max-height:380px;overflow-y:auto"></div>
+    </div>
+
+    <!-- APPLY TAB -->
+    <div id="lib-apply-panel" style="display:none">
+      <p style="font-size:11px;color:rgba(253,246,232,.45);margin-bottom:12px;line-height:1.5">
+        Pick images from your library to use as the artwork pack for
+        <strong style="color:var(--gold)" id="lib-apply-nb-name">this notebook</strong>.
+        They will cycle page by page as you write.
+      </p>
+
+      <!-- Selected images preview -->
+      <div class="modal-lbl">Selected for this notebook
+        <span id="lib-sel-count" style="color:var(--gold)">(0 selected)</span>
+      </div>
+      <div id="lib-selected-preview" style="display:flex;gap:5px;flex-wrap:wrap;
+        min-height:40px;margin-bottom:12px;padding:6px;
+        border:1px solid rgba(201,168,76,.12);border-radius:8px;
+        background:rgba(201,168,76,.04)">
+        <span style="font-size:11px;color:rgba(201,168,76,.3);align-self:center;
+          padding:4px" id="lib-sel-hint">Tap images below to select them</span>
+      </div>
+
+      <!-- All library images to pick from -->
+      <div id="lib-pick-content" style="max-height:300px;overflow-y:auto"></div>
+
+      <!-- Rotation + line pattern -->
+      <div class="modal-lbl" style="margin-top:10px">Rotation</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button class="tpl-chip active" data-rot="cycle" onclick="selectArtRot(this,'cycle')">🔄 Cycle</button>
+        <button class="tpl-chip" data-rot="random" onclick="selectArtRot(this,'random')">🎲 Random</button>
+      </div>
+      <div class="modal-lbl">Line pattern</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="art-tpl-opts">
+        <button class="tpl-chip active" data-tpl="lined"   onclick="selectArtTpl(this,'lined')">Lined</button>
+        <button class="tpl-chip"        data-tpl="dotted"  onclick="selectArtTpl(this,'dotted')">Dotted</button>
+        <button class="tpl-chip"        data-tpl="grid"    onclick="selectArtTpl(this,'grid')">Grid</button>
+        <button class="tpl-chip"        data-tpl="blank"   onclick="selectArtTpl(this,'blank')">No lines</button>
+        <button class="tpl-chip"        data-tpl="cornell" onclick="selectArtTpl(this,'cornell')">Cornell</button>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn-cxl" onclick="switchLibTab('browse',document.getElementById('lib-tab-browse'))">← Back</button>
+        <button class="btn-pri" onclick="applyLibSelection()">Apply to Notebook ✦</button>
+      </div>
+    </div>
+
+    <div class="modal-foot" id="lib-browse-foot">
+      <button class="btn-cxl" onclick="closeM('m-library')">Close</button>
+      <button class="btn-pri" onclick="switchLibTab('apply',document.getElementById('lib-tab-apply'))"
+        id="lib-apply-btn" style="display:none">Apply to Notebook ✦</button>
     </div>
   </div>
 </div>
@@ -1539,6 +1674,7 @@ const S={
   swipeX:null,      // touch swipe tracking
   toolbarsCollapsed:false,
   _toolbarHideTimer:null,
+  artLibrary:{images:[],collections:[]}, // artwork library
 };
 
 /* ═══════ INIT ═══════ */
@@ -3863,8 +3999,367 @@ function initTheme(){
   applyTheme(saved);
 }
 
+
+/* ══════════════════════════════════════════════════════════
+   ARTWORK LIBRARY SYSTEM
+   ─────────────────────────────────────────────────────────
+   S.artLibrary = {
+     images: [{id, name, dataURL, colId, added}],  // all uploaded images
+     collections: [{id, name}]                      // named groups
+   }
+   No hard limit on image count — personal use only.
+   Stored in localStorage under 'ai_artlib'.
+   Large libraries auto-warn but never block.
+══════════════════════════════════════════════════════════ */
+
+function loadArtLibrary(){
+  try{
+    const s=localStorage.getItem('ai_artlib');
+    if(s){
+      S.artLibrary=JSON.parse(s);
+    }else{
+      S.artLibrary={images:[],collections:[]};
+    }
+  }catch(e){
+    S.artLibrary={images:[],collections:[]};
+  }
+}
+
+function saveArtLibrary(){
+  try{
+    localStorage.setItem('ai_artlib',JSON.stringify(S.artLibrary));
+  }catch(e){
+    toast('Library storage full — try removing unused images','info');
+  }
+  renderLibrarySidebar();
+}
+
+/* ── Open library modal ── */
+function openLibrary(){
+  closeSidebar();
+  loadArtLibrary();
+  // Show apply button only if a notebook is open
+  const applyBtn=document.getElementById('lib-apply-btn');
+  if(applyBtn)applyBtn.style.display=S.nb?'inline-flex':'none';
+  // Update apply tab notebook name
+  const nbName=document.getElementById('lib-apply-nb-name');
+  if(nbName)nbName.textContent=S.nb?`"${S.nb.title}"`:'this notebook';
+  // Reset to browse tab
+  switchLibTab('browse',document.getElementById('lib-tab-browse'));
+  renderLibBrowse();
+  rebuildLibUploadTarget();
+  openM('m-library');
+}
+
+function switchLibTab(tab,btn){
+  document.querySelectorAll('.lib-tab').forEach(t=>t.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.getElementById('lib-browse-panel').style.display=tab==='browse'?'block':'none';
+  document.getElementById('lib-apply-panel').style.display=tab==='apply'?'block':'none';
+  document.getElementById('lib-browse-foot').style.display=tab==='browse'?'flex':'none';
+  if(tab==='apply'){
+    renderLibPick();
+    // Pre-select images already in this notebook's artPack
+    if(S.nb&&S.nb.artPack){
+      libSelectedIds=new Set(
+        S.artLibrary.images
+          .filter(img=>S.nb.artPack.includes(img.dataURL))
+          .map(img=>img.id)
+      );
+    }else{
+      libSelectedIds=new Set();
+    }
+    renderLibSelectedPreview();
+  }
+}
+
+/* ── Render browse tab ── */
+function renderLibBrowse(){
+  const el=document.getElementById('lib-content');
+  if(!el)return;
+  const {images,collections}=S.artLibrary;
+  let h='';
+
+  // Collections first
+  collections.forEach(col=>{
+    const imgs=images.filter(img=>img.colId===col.id);
+    h+=`<div class="lib-collection">
+      <div class="lib-col-header">
+        <span class="lib-col-name">${esc(col.name)}</span>
+        <span class="lib-col-count">${imgs.length} image${imgs.length!==1?'s':''}</span>
+        <button class="lib-col-btn" onclick="renameLibCollection('${col.id}')">✏️</button>
+        <button class="lib-col-btn danger" onclick="deleteLibCollection('${col.id}')">🗑</button>
+      </div>
+      <div class="lib-grid">`;
+    imgs.forEach((img,i)=>{
+      h+=`<div class="lib-img-wrap" data-id="${img.id}">
+        <img src="${img.dataURL}" alt="${esc(img.name)}">
+        <div class="lib-img-num">${i+1}</div>
+        <button class="lib-img-del" onclick="deleteLibImage('${img.id}',event)">✕</button>
+      </div>`;
+    });
+    if(!imgs.length)h+=`<div style="grid-column:1/-1;font-size:11px;color:rgba(201,168,76,.3);padding:8px">No images yet — upload some above</div>`;
+    h+=`</div></div>`;
+  });
+
+  // Uncollected images
+  const uncollected=images.filter(img=>!img.colId);
+  if(uncollected.length){
+    h+=`<div class="lib-uncollected">
+      <div class="lib-col-header">
+        <span class="lib-col-name" style="opacity:.6">Uncollected</span>
+        <span class="lib-col-count">${uncollected.length} image${uncollected.length!==1?'s':''}</span>
+      </div>
+      <div class="lib-grid">`;
+    uncollected.forEach((img,i)=>{
+      h+=`<div class="lib-img-wrap" data-id="${img.id}">
+        <img src="${img.dataURL}" alt="${esc(img.name)}">
+        <div class="lib-img-num">${i+1}</div>
+        <button class="lib-img-del" onclick="deleteLibImage('${img.id}',event)">✕</button>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  }
+
+  if(!images.length){
+    h=`<div style="text-align:center;padding:24px;color:rgba(201,168,76,.3);font-size:13px">
+      Your library is empty.<br>Upload images above to get started ✦
+    </div>`;
+  }
+
+  // Storage warning
+  if(images.length>=50){
+    h=`<div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);
+      border-radius:8px;padding:8px 12px;font-size:11px;color:rgba(201,168,76,.6);
+      margin-bottom:10px">
+      ⚠️ ${images.length} images in library — if the app feels slow, consider removing unused ones.
+    </div>`+h;
+  }
+
+  el.innerHTML=h;
+}
+
+/* ── Upload images to library ── */
+function handleLibUpload(e){
+  const files=Array.from(e.target.files||[]);
+  e.target.value='';
+  if(!files.length)return;
+
+  const targetColId=document.getElementById('lib-upload-target')?.value||'';
+  let loaded=0;
+
+  files.forEach(file=>{
+    if(!file.type.startsWith('image/')){return;}
+    if(file.size>10*1024*1024){toast(`${file.name} over 10MB — skipped`,'info');return;}
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      S.artLibrary.images.push({
+        id:uid(),
+        name:file.name.replace(/\.[^/.]+$/,''), // strip extension
+        dataURL:ev.target.result,
+        colId:targetColId||null,
+        added:new Date().toISOString()
+      });
+      loaded++;
+      if(loaded===files.length){
+        saveArtLibrary();
+        renderLibBrowse();
+        toast(`${loaded} image${loaded!==1?'s':''} added to library ✦`,'ok');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ── Collections ── */
+function addLibCollection(){
+  const name=prompt('Collection name (e.g. Turtle Pack, Book Theme):','');
+  if(!name||!name.trim())return;
+  S.artLibrary.collections.push({id:uid(),name:name.trim()});
+  saveArtLibrary();
+  renderLibBrowse();
+  rebuildLibUploadTarget();
+  toast(`Collection "${name.trim()}" created ✦`,'ok');
+}
+
+function renameLibCollection(id){
+  const col=S.artLibrary.collections.find(c=>c.id===id);
+  if(!col)return;
+  const name=prompt('Rename collection:',col.name);
+  if(!name||!name.trim())return;
+  col.name=name.trim();
+  saveArtLibrary();
+  renderLibBrowse();
+  rebuildLibUploadTarget();
+}
+
+function deleteLibCollection(id){
+  const col=S.artLibrary.collections.find(c=>c.id===id);
+  if(!col)return;
+  const imgs=S.artLibrary.images.filter(i=>i.colId===id).length;
+  const msg=imgs>0
+    ?`Delete "${col.name}"? Its ${imgs} image${imgs!==1?'s':''} will move to Uncollected.`
+    :`Delete collection "${col.name}"?`;
+  if(!confirm(msg))return;
+  // Move images to uncollected
+  S.artLibrary.images.forEach(img=>{if(img.colId===id)img.colId=null;});
+  S.artLibrary.collections=S.artLibrary.collections.filter(c=>c.id!==id);
+  saveArtLibrary();
+  renderLibBrowse();
+  rebuildLibUploadTarget();
+}
+
+function deleteLibImage(id,e){
+  if(e)e.stopPropagation();
+  const img=S.artLibrary.images.find(i=>i.id===id);
+  if(!img)return;
+  if(!confirm(`Remove "${img.name}" from library?`))return;
+  S.artLibrary.images=S.artLibrary.images.filter(i=>i.id!==id);
+  // Also remove from any notebook artPacks that use this image
+  S.notebooks.forEach(nb=>{
+    if(nb.artPack)nb.artPack=nb.artPack.filter(url=>url!==img.dataURL);
+  });
+  saveArtLibrary();
+  save();
+  renderLibBrowse();
+  toast(`"${img.name}" removed ✦`,'ok');
+}
+
+function rebuildLibUploadTarget(){
+  const sel=document.getElementById('lib-upload-target');
+  if(!sel)return;
+  const current=sel.value;
+  sel.innerHTML='<option value="">No collection</option>';
+  S.artLibrary.collections.forEach(col=>{
+    const opt=document.createElement('option');
+    opt.value=col.id;opt.textContent=col.name;
+    sel.appendChild(opt);
+  });
+  sel.value=current||'';
+}
+
+/* ── Apply tab — pick images from library ── */
+let libSelectedIds=new Set();
+
+function renderLibPick(){
+  const el=document.getElementById('lib-pick-content');
+  if(!el)return;
+  const {images,collections}=S.artLibrary;
+  if(!images.length){
+    el.innerHTML=`<div style="text-align:center;padding:16px;color:rgba(201,168,76,.3);font-size:12px">
+      No images in library yet. Go to Browse Library to add some.</div>`;
+    return;
+  }
+  let h='';
+  // Show by collection
+  const showGroup=(label,imgs)=>{
+    if(!imgs.length)return;
+    h+=`<div style="font-size:10px;color:rgba(201,168,76,.45);letter-spacing:1px;
+      text-transform:uppercase;margin:8px 0 5px">${esc(label)}</div>
+      <div class="lib-grid" style="margin-bottom:10px">`;
+    imgs.forEach(img=>{
+      const sel=libSelectedIds.has(img.id);
+      h+=`<div class="lib-img-wrap${sel?' selected':''}" onclick="toggleLibSelect('${img.id}')">
+        <img src="${img.dataURL}" alt="${esc(img.name)}">
+        ${sel?'<div style="position:absolute;inset:0;background:rgba(201,168,76,.25);display:flex;align-items:center;justify-content:center;font-size:20px">✓</div>':''}
+      </div>`;
+    });
+    h+='</div>';
+  };
+  collections.forEach(col=>{
+    showGroup(col.name,images.filter(img=>img.colId===col.id));
+  });
+  showGroup('Uncollected',images.filter(img=>!img.colId));
+  el.innerHTML=h;
+}
+
+function toggleLibSelect(id){
+  if(libSelectedIds.has(id))libSelectedIds.delete(id);
+  else libSelectedIds.add(id);
+  renderLibPick();
+  renderLibSelectedPreview();
+}
+
+function renderLibSelectedPreview(){
+  const el=document.getElementById('lib-selected-preview');
+  const hint=document.getElementById('lib-sel-hint');
+  const counter=document.getElementById('lib-sel-count');
+  if(!el)return;
+  const selected=S.artLibrary.images.filter(img=>libSelectedIds.has(img.id));
+  if(counter)counter.textContent=`(${selected.length} selected)`;
+  if(!selected.length){
+    el.innerHTML='<span style="font-size:11px;color:rgba(201,168,76,.3);align-self:center;padding:4px">Tap images below to select them</span>';
+    return;
+  }
+  el.innerHTML=selected.map((img,i)=>
+    `<div style="position:relative;width:36px;height:48px;border-radius:4px;overflow:hidden;flex-shrink:0">
+      <img src="${img.dataURL}" style="width:100%;height:100%;object-fit:cover">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);
+        color:white;font-size:7px;text-align:center;padding:1px">${i+1}</div>
+    </div>`
+  ).join('');
+}
+
+function applyLibSelection(){
+  if(!S.nb){toast('Open a notebook first','info');return;}
+  if(!libSelectedIds.size){toast('Select at least one image','info');return;}
+  const selected=S.artLibrary.images.filter(img=>libSelectedIds.has(img.id));
+  S.nb.artPack=selected.map(img=>img.dataURL);
+  S.nb.artTpl=pendingArtTpl||'lined';
+  S.nb.artRot=pendingArtRot||'cycle';
+  S.nb.tpl=S.nb.artTpl;
+  S.tpl=S.nb.artTpl;
+  save();
+  closeM('m-library');
+  renderPage();
+  renderShelf(S.folder==='all'?null:S.folder);
+  toast(`${selected.length} image${selected.length!==1?'s':''} applied to "${S.nb.title}" ✦`,'ok');
+}
+
+/* ── Sidebar library preview ── */
+function renderLibrarySidebar(){
+  const list=document.getElementById('col-list');
+  if(!list)return;
+  const lib=S.artLibrary;
+  if(!lib||!lib.images.length){
+    list.innerHTML=`<div style="padding:5px 15px 10px;font-size:11px;color:rgba(201,168,76,.28)">
+      Tap Open to manage your artwork library</div>`;
+    return;
+  }
+  const cols=lib.collections.length;
+  const imgs=lib.images.length;
+  list.innerHTML=`<div style="padding:5px 15px 8px;display:flex;align-items:center;gap:8px">
+    <div style="display:flex;gap:3px">
+      ${lib.images.slice(0,4).map(img=>
+        `<div style="width:24px;height:32px;border-radius:2px 4px 4px 2px;overflow:hidden;flex-shrink:0">
+          <img src="${img.dataURL}" style="width:100%;height:100%;object-fit:cover">
+        </div>`
+      ).join('')}
+    </div>
+    <div style="font-size:10px;color:rgba(201,168,76,.5);line-height:1.4">
+      ${imgs} image${imgs!==1?'s':''}<br>
+      ${cols} collection${cols!==1?'s':''}
+    </div>
+  </div>`;
+}
+
+/* ── Update openArtPicker to also show library option ── */
+const _origOpenArtPicker=openArtPicker;
+function openArtPickerOrLibrary(){
+  // If library has images, offer choice
+  if(S.artLibrary&&S.artLibrary.images.length){
+    openLibrary();
+    // Switch directly to apply tab
+    setTimeout(()=>switchLibTab('apply',document.getElementById('lib-tab-apply')),100);
+  }else{
+    _origOpenArtPicker();
+  }
+}
+
 init();
 initTheme();
+loadArtLibrary();
+renderLibrarySidebar();
 // Check reminders after app fully loads
 setTimeout(checkAndShowStartupReminder,2500);
 </script>
