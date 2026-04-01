@@ -742,6 +742,160 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(201,168,76,.16);border-radius:2px}
+/* ══ INK DRAWING SYSTEM ══ */
+
+/* Canvas sits on top of everything, below the pg-head */
+#ink-canvas{
+  position:absolute;
+  inset:0;
+  z-index:6;
+  touch-action:none;
+  cursor:crosshair;
+  display:none;
+}
+.ink-mode #ink-canvas{display:block;}
+.ink-mode #plain-textarea{pointer-events:none;}
+.ink-mode #writing-layer{pointer-events:none;}
+
+/* Mode toggle pill — floats above flip row */
+#ink-mode-toggle{
+  position:fixed;
+  bottom:calc(var(--flip-h) + 8px + var(--safe-bottom));
+  right:12px;
+  z-index:60;
+  display:none;
+  background:rgba(17,16,9,.92);
+  border:1px solid rgba(201,168,76,.3);
+  border-radius:24px;
+  overflow:hidden;
+  box-shadow:0 4px 18px rgba(0,0,0,.5);
+  backdrop-filter:blur(12px);
+}
+#ink-mode-toggle.show{display:flex;}
+.ink-mode-btn{
+  padding:8px 14px;
+  background:transparent;
+  border:none;
+  color:rgba(201,168,76,.55);
+  cursor:pointer;
+  font-family:var(--font-u);
+  font-size:12px;
+  font-weight:500;
+  transition:all .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.ink-mode-btn.active{
+  background:rgba(201,168,76,.18);
+  color:var(--gold);
+}
+
+/* Ink toolbar — slides up from bottom when in draw mode */
+#ink-toolbar{
+  position:fixed;
+  bottom:calc(var(--flip-h) + 48px + var(--safe-bottom));
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  z-index:61;
+  display:none;
+  opacity:0;
+  transition:opacity .25s, transform .25s;
+  background:rgba(12,9,4,.95);
+  border:1px solid rgba(201,168,76,.25);
+  border-radius:20px;
+  padding:8px 12px;
+  gap:6px;
+  align-items:center;
+  box-shadow:0 6px 28px rgba(0,0,0,.6);
+  backdrop-filter:blur(16px);
+  flex-wrap:nowrap;
+  max-width:calc(100vw - 24px);
+  overflow-x:auto;
+}
+#ink-toolbar.show{
+  display:flex;
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.ink-tool-sep{
+  width:1px;height:24px;
+  background:rgba(201,168,76,.2);
+  flex-shrink:0;
+}
+/* Color swatches */
+.ink-color{
+  width:22px;height:22px;
+  border-radius:50%;
+  border:2px solid transparent;
+  cursor:pointer;
+  flex-shrink:0;
+  transition:transform .15s, border-color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.ink-color:active{transform:scale(.88);}
+.ink-color.active{border-color:#fff;transform:scale(1.15);}
+/* Width buttons */
+.ink-width{
+  background:transparent;
+  border:1px solid rgba(201,168,76,.25);
+  border-radius:8px;
+  color:rgba(201,168,76,.6);
+  cursor:pointer;
+  font-size:10px;
+  padding:4px 8px;
+  font-family:var(--font-u);
+  transition:all .15s;
+  flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.ink-width.active{
+  background:rgba(201,168,76,.18);
+  color:var(--gold);
+  border-color:rgba(201,168,76,.5);
+}
+/* Style buttons */
+.ink-style{
+  background:transparent;
+  border:1px solid rgba(201,168,76,.2);
+  border-radius:8px;
+  color:rgba(201,168,76,.5);
+  cursor:pointer;
+  font-size:10px;
+  padding:4px 7px;
+  font-family:var(--font-u);
+  transition:all .15s;
+  flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.ink-style.active{
+  background:rgba(201,168,76,.15);
+  color:var(--gold);
+  border-color:rgba(201,168,76,.45);
+}
+/* Eraser / undo / redo */
+.ink-action{
+  background:transparent;
+  border:1px solid rgba(201,168,76,.2);
+  border-radius:8px;
+  color:rgba(201,168,76,.5);
+  cursor:pointer;
+  font-size:14px;
+  padding:4px 8px;
+  transition:all .15s;
+  flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.ink-action.active{
+  background:rgba(212,132,122,.2);
+  color:var(--rose);
+  border-color:rgba(212,132,122,.4);
+}
+.ink-action:active{transform:scale(.9);}
+/* Highlighter uses transparent strokes */
+.ink-style[data-style="highlight"].active{
+  background:rgba(255,230,50,.15);
+  color:#ffe632;
+  border-color:rgba(255,230,50,.4);
+}
 
 /* ══ ARTWORK LIBRARY ══ */
 .lib-collection{margin-bottom:14px}
@@ -818,14 +972,19 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 
 /* ── DUE DATE on todo items ── */
 .todo-due{
-  font-size:10px;padding:2px 7px;border-radius:10px;
+  font-size:12px;font-weight:600;
+  padding:4px 10px;border-radius:10px;
   font-family:var(--font-u);cursor:pointer;white-space:nowrap;flex-shrink:0;
-  border:1px solid rgba(201,168,76,.25);color:rgba(201,168,76,.6);
-  background:rgba(201,168,76,.07);transition:all .15s;
+  border:2px solid rgba(201,168,76,.4);
+  color:rgba(201,168,76,.85);
+  background:rgba(201,168,76,.12);
+  transition:all .15s;
+  min-width:72px;text-align:center;
 }
-.todo-due:hover{background:rgba(201,168,76,.15);color:var(--gold);}
-.todo-due.overdue{border-color:rgba(192,57,43,.4);color:#e74c3c;background:rgba(192,57,43,.1);}
-.todo-due.today{border-color:rgba(230,126,34,.4);color:#e67e22;background:rgba(230,126,34,.1);}
+.todo-due:hover{background:rgba(201,168,76,.22);color:var(--gold);transform:scale(1.04);}
+.todo-due.overdue{border-color:#e74c3c;color:#ff6b6b;background:rgba(231,76,60,.15);font-weight:700;}
+.todo-due.today{border-color:#e67e22;color:#ff9f43;background:rgba(230,126,34,.15);font-weight:700;}
+.todo-due.upcoming{border-color:var(--sage);color:var(--sage);background:rgba(122,158,126,.1);}
 
 /* ── IN-APP REMINDER POPUP ── */
 #reminder-popup{
@@ -1083,6 +1242,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <div class="nb-nb-title" id="nb-ttl">—</div>
         <button class="tbb" id="view-btn" onclick="toggleClean()">🖼 Art</button>
         <button class="tbb" id="art-btn" onclick="openArtPicker()" title="Set page artwork">🖼 Art</button>
+        <button class="tbb" id="draw-mode-tbb" onclick="setInkMode('draw')" title="Draw with stylus">🖊</button>
         <button class="tbb" onclick="addPage()">＋</button>
         <button class="tbb" onclick="toast('Bookmarked ✦','ok')">🔖</button>
         <button class="tbb" onclick="openExport()" title="Export to PDF">📤 PDF</button>
@@ -1128,6 +1288,9 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
           <!-- PLAIN TEXTAREA: used for non-PDF templates -->
           <textarea id="plain-textarea" style="display:none"
                     placeholder="Start writing…" spellcheck="true"></textarea>
+
+          <!-- INK CANVAS — sits above text layers, below pg-head -->
+          <canvas id="ink-canvas"></canvas>
 
           <!-- PAGE HEADER — page number + stamp, always on top -->
           <div class="pg-inner" style="pointer-events:none;position:relative;z-index:5">
@@ -1218,14 +1381,29 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
     <div class="modal-lbl">Emoji (optional)</div>
     <input class="modal-inp" id="m-nb-emoji" type="text" placeholder="🌿 🌙 ✨ 🦋 📖 🐢 …" maxlength="4" inputmode="text">
     <div class="modal-lbl">Default Template</div>
-    <select class="modal-inp" id="m-nb-tpl">
+    <select class="modal-inp" id="m-nb-tpl" onchange="onNBTplChange(this)">
       <option value="lined">Lined</option>
       <option value="dotted">Dotted</option>
       <option value="grid">Grid</option>
       <option value="blank">Blank</option>
       <option value="cornell">Cornell</option>
-      <option value="todo">To-Do List</option>
+      <option value="todo">✅ To-Do List (with reminders)</option>
     </select>
+
+    <!-- Prefer Draw toggle — hidden for To-Do notebooks -->
+    <div class="reminder-toggle-row" id="nb-prefer-draw-row" style="margin-top:4px">
+      <div>
+        <div style="font-size:13px;color:var(--cream)">🖊 Open in Draw mode</div>
+        <div style="font-size:10px;color:rgba(201,168,76,.4);margin-top:2px">
+          Best for journals, sketchbooks, freehand notes
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="m-nb-prefer-draw">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
     <div class="modal-foot">
       <button class="btn-cxl" onclick="closeM('m-nb')">Cancel</button>
       <button class="btn-pri" onclick="createNB()">Create ✦</button>
@@ -1515,6 +1693,41 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   </div>
 </div>
 
+<!-- INK MODE TOGGLE (✏️ Type | 🖊 Draw) -->
+<div id="ink-mode-toggle">
+  <button class="ink-mode-btn active" id="btn-type-mode" onclick="setInkMode('type')">✏️ Type</button>
+  <button class="ink-mode-btn" id="btn-draw-mode" onclick="setInkMode('draw')">🖊 Draw</button>
+</div>
+
+<!-- INK TOOLBAR (shown in draw mode) -->
+<div id="ink-toolbar">
+  <!-- Colors -->
+  <div class="ink-color active" data-color="#1a1206" style="background:#1a1206" title="Black" onclick="setInkColor('#1a1206',this)"></div>
+  <div class="ink-color" data-color="#1a3a6e" style="background:#1a3a6e" title="Blue" onclick="setInkColor('#1a3a6e',this)"></div>
+  <div class="ink-color" data-color="#8b1a1a" style="background:#8b1a1a" title="Red" onclick="setInkColor('#8b1a1a',this)"></div>
+  <div class="ink-color" data-color="#c9a84c" style="background:#c9a84c" title="Gold" onclick="setInkColor('#c9a84c',this)"></div>
+  <div class="ink-color" data-color="#2d6a4f" style="background:#2d6a4f" title="Green" onclick="setInkColor('#2d6a4f',this)"></div>
+  <div class="ink-color" data-color="#4a1a6e" style="background:#4a1a6e" title="Purple" onclick="setInkColor('#4a1a6e',this)"></div>
+  <div class="ink-tool-sep"></div>
+  <!-- Widths -->
+  <button class="ink-width" data-w="1.5" onclick="setInkWidth(1.5,this)">F</button>
+  <button class="ink-width active" data-w="3" onclick="setInkWidth(3,this)">M</button>
+  <button class="ink-width" data-w="6" onclick="setInkWidth(6,this)">T</button>
+  <div class="ink-tool-sep"></div>
+  <!-- Styles -->
+  <button class="ink-style active" data-style="ballpoint" onclick="setInkStyle('ballpoint',this)">BP</button>
+  <button class="ink-style" data-style="marker" onclick="setInkStyle('marker',this)">MK</button>
+  <button class="ink-style" data-style="brush" onclick="setInkStyle('brush',this)">BR</button>
+  <button class="ink-style" data-style="pencil" onclick="setInkStyle('pencil',this)">PC</button>
+  <button class="ink-style" data-style="highlight" onclick="setInkStyle('highlight',this)">HL</button>
+  <div class="ink-tool-sep"></div>
+  <!-- Actions -->
+  <button class="ink-action" id="ink-eraser-btn" onclick="toggleEraser()" title="Eraser">⌫</button>
+  <button class="ink-action" onclick="inkUndo()" title="Undo">↩</button>
+  <button class="ink-action" onclick="inkRedo()" title="Redo">↪</button>
+  <button class="ink-action" onclick="clearInkPage()" title="Clear page" style="color:rgba(212,132,122,.5)">🗑</button>
+</div>
+
 <!-- FLOATING BACK BUTTON -->
 <div id="float-back" onclick="floatBackAction()">
   ← Back
@@ -1558,6 +1771,33 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
     <button onclick="dismissNotifBanner()" style="padding:8px 12px;background:transparent;
       border:1px solid rgba(201,168,76,.2);border-radius:8px;color:rgba(201,168,76,.5);
       cursor:pointer;font-family:var(--font-u);font-size:12px">Not now</button>
+  </div>
+</div>
+
+<!-- DATE PICKER MODAL -->
+<div class="modal-ov" id="m-datepick">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-title">📅 Set Due Date</div>
+    <div id="dp-cal" style="margin-bottom:14px"></div>
+    <!-- Quick options -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+      <button onclick="dpQuick(0)" style="padding:8px;background:rgba(230,126,34,.12);
+        border:1px solid rgba(230,126,34,.3);border-radius:8px;color:#ff9f43;
+        cursor:pointer;font-family:var(--font-u);font-size:12px">📅 Today</button>
+      <button onclick="dpQuick(1)" style="padding:8px;background:rgba(201,168,76,.08);
+        border:1px solid rgba(201,168,76,.2);border-radius:8px;color:var(--gold);
+        cursor:pointer;font-family:var(--font-u);font-size:12px">📅 Tomorrow</button>
+      <button onclick="dpQuick(7)" style="padding:8px;background:rgba(201,168,76,.08);
+        border:1px solid rgba(201,168,76,.2);border-radius:8px;color:var(--gold);
+        cursor:pointer;font-family:var(--font-u);font-size:12px">📅 Next week</button>
+      <button onclick="dpClear()" style="padding:8px;background:rgba(212,132,122,.08);
+        border:1px solid rgba(212,132,122,.2);border-radius:8px;color:var(--rose);
+        cursor:pointer;font-family:var(--font-u);font-size:12px">✕ Clear date</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cxl" onclick="closeM('m-datepick')">Cancel</button>
+      <button class="btn-pri" id="dp-apply-btn" onclick="dpApply()">Set Date ✦</button>
+    </div>
   </div>
 </div>
 
@@ -1801,7 +2041,8 @@ function mkNB(s){
     artPack:s.artPack||[],
     artTpl:s.artTpl||'lined',
     artRot:s.artRot||'cycle',
-    remindersOn:s.remindersOn||false, // per-notebook reminder toggle
+    remindersOn:s.remindersOn||false,
+    preferDraw:s.preferDraw||false, // true = opens in Draw mode by default
     pages:s.pages||[''],tpl:s.tpl||'lined',colId:null,colOff:0,
     created:new Date().toISOString(),modified:new Date().toISOString(),
     stamps:['']};
@@ -2103,15 +2344,8 @@ function tdAdd(e,idx){
   S.nb.pages[idx]=ln.join('\n');save();renderPage();
 }
 function tdSetDue(idx,li,currentDue){
-  const due=prompt('Set due date (YYYY-MM-DD) or leave blank to clear:',currentDue||'');
-  if(due===null)return; // cancelled
-  const ln=(S.nb.pages[idx]||'').split('\n');
-  const {done,txt}=parseTodoLine(ln[li]||'');
-  ln[li]=formatTodoLine(done,txt,due.trim());
-  S.nb.pages[idx]=ln.join('\n');
-  save();renderPage();
-  // Schedule notification if due date set
-  if(due.trim())scheduleTaskNotification(S.nb,txt,due.trim());
+  // Open calendar date picker instead of text prompt
+  openDatePicker(idx,li,currentDue||'');
 }
 
 /* ═══════ SHELF ═══════ */
@@ -2287,19 +2521,42 @@ function openNB(nb){
   document.getElementById('nb-view').classList.add('active');
   document.getElementById('nb-ttl').textContent=(nb.emoji?nb.emoji+' ':'')+nb.title;
   document.getElementById('tb-title').textContent=nb.title;
-  // template chips
-  document.querySelectorAll('.tpl-chip').forEach(c=>{
-    const m=(c.dataset.t===S.tpl)||(c.dataset.colId===nb.colId&&S.tpl==='pdf');
-    c.classList.toggle('active',m);
-  });
+
+  // ── TO-DO NOTEBOOK: lock template, force type mode ──
+  const isTodoNB = nb.tpl==='todo';
+  // Hide/show template bar chips based on notebook type
+  const tplBar=document.getElementById('tpl-bar');
+  if(isTodoNB){
+    // Lock to todo — hide template switcher entirely
+    if(tplBar)tplBar.style.display='none';
+  }else{
+    if(tplBar)tplBar.style.display='';
+    // template chips
+    document.querySelectorAll('.tpl-chip').forEach(c=>{
+      const m=(c.dataset.t===S.tpl)||(c.dataset.colId===nb.colId&&S.tpl==='pdf');
+      c.classList.toggle('active',m);
+    });
+  }
+
   nb.stamps=nb.stamps||[];if(!nb.stamps[0])nb.stamps[0]=nowStamp();
-  // Collapse toolbars for maximum writing space
   collapseToolbars();
   closeSidebar();
+
   // Show floating back button
   const fb=document.getElementById('float-back');
   if(fb){fb.dataset.action='shelf';fb.classList.add('show');}
+
   renderPage();
+
+  // ── AUTO MODE: Draw mode for preferDraw notebooks ──
+  // Small delay so canvas is sized correctly after renderPage
+  setTimeout(()=>{
+    if(nb.preferDraw && !isTodoNB){
+      setInkMode('draw');
+    }else{
+      if(INK.mode==='draw')setInkMode('type');
+    }
+  },150);
 }
 
 function collapseToolbars(){
@@ -2408,11 +2665,13 @@ function createNB(){
   const title=document.getElementById('m-nb-title').value.trim();
   if(!title){toast('Please enter a title ✦','info');return;}
   const coverImg=document.getElementById('m-nb-coverimg').value||null;
+  const tpl=document.getElementById('m-nb-tpl').value;
   const nb=mkNB({title,folder:document.getElementById('m-nb-folder').value,
     cov:parseInt(document.querySelector('.cov-opt.sel')?.dataset.c||1),
     emoji:document.getElementById('m-nb-emoji').value.trim()||'',
     coverImg,
-    pages:[''],tpl:document.getElementById('m-nb-tpl').value});
+    preferDraw: tpl!=='todo' && (document.getElementById('m-nb-prefer-draw')?.checked||false),
+    pages:[''],tpl});
   S.notebooks.push(nb);save();updateCounts();
   closeM('m-nb');
   clearCoverImg();
@@ -2629,6 +2888,14 @@ function openCoverEdit(nb){
     preview.innerHTML=`<img src="${nb.coverImg}" alt="cover"><div class="overlay">📷 Change photo</div>`;
     document.getElementById('m-nb-coverimg').value=nb.coverImg;
   }else{clearCoverImg();}
+  // Set tpl selector
+  const tplSel=document.getElementById('m-nb-tpl');
+  if(tplSel)tplSel.value=nb.tpl||'lined';
+  // Set preferDraw toggle
+  const drawCb=document.getElementById('m-nb-prefer-draw');
+  if(drawCb)drawCb.checked=nb.preferDraw||false;
+  // Show/hide draw toggle based on template
+  onNBTplChange(tplSel);
   // Switch create button to update mode
   const btn=document.querySelector('#m-nb .btn-pri');
   btn.textContent='Save Changes ✦';
@@ -2645,6 +2912,10 @@ function saveNBEdits(nb){
   nb.emoji=document.getElementById('m-nb-emoji').value.trim();
   const ci=document.getElementById('m-nb-coverimg').value;
   if(ci)nb.coverImg=ci;
+  // Save preferDraw (never for todo notebooks)
+  if(nb.tpl!=='todo'){
+    nb.preferDraw=document.getElementById('m-nb-prefer-draw')?.checked||false;
+  }
   nb.modified=new Date().toISOString();
   save();fbSyncDebounced();
   closeM('m-nb');
@@ -4366,10 +4637,553 @@ function openArtPickerOrLibrary(){
   }
 }
 
+
+/* ══════════════════════════════════════════════════════════
+   INK DRAWING ENGINE
+   ─────────────────────────────────────────────────────────
+   Architecture:
+   - Each page has an optional ink layer stored as strokes[]
+   - Strokes are arrays of points {x,y,p} where p=pressure
+   - Canvas redraws from strokes on every page turn
+   - Supports S Pen pressure (pointerType='pen') and touch
+   - Undo/redo via stroke stack
+   - Styles: ballpoint, marker, brush, pencil, highlighter
+══════════════════════════════════════════════════════════ */
+
+/* ── State ── */
+const INK = {
+  mode: 'type',         // 'type' | 'draw'
+  color: '#1a1206',
+  width: 3,
+  style: 'ballpoint',   // ballpoint|marker|brush|pencil|highlight
+  eraser: false,
+  drawing: false,
+  currentStroke: null,
+  strokes: [],          // all strokes for current page
+  undoStack: [],        // for undo
+  redoStack: [],        // for redo
+  ctx: null,
+  canvas: null,
+};
+
+/* ── Ink data per notebook page ──
+   nb.inkPages = { '0': [stroke,...], '1': [...] }
+   stroke = { color, width, style, points:[{x,y,p}], eraser }
+*/
+
+function getInkCanvas(){
+  if(!INK.canvas){
+    INK.canvas=document.getElementById('ink-canvas');
+    INK.ctx=INK.canvas?.getContext('2d');
+  }
+  return INK.canvas;
+}
+
+/* ── Mode toggle ── */
+function setInkMode(mode){
+  INK.mode=mode;
+  const page=document.getElementById('the-page');
+  const toggle=document.getElementById('ink-mode-toggle');
+  const toolbar=document.getElementById('ink-toolbar');
+  const btnType=document.getElementById('btn-type-mode');
+  const btnDraw=document.getElementById('btn-draw-mode');
+  const drawTbb=document.getElementById('draw-mode-tbb');
+
+  if(mode==='draw'){
+    page?.classList.add('ink-mode');
+    toolbar?.classList.add('show');
+    btnType?.classList.remove('active');
+    btnDraw?.classList.add('active');
+    if(drawTbb)drawTbb.style.background='rgba(201,168,76,.18)';
+    resizeInkCanvas();
+    loadInkPage();
+    // Prevent page scroll while drawing
+    document.body.style.overflow='hidden';
+    toast('✏️ Draw mode — use your stylus or finger','info');
+  }else{
+    page?.classList.remove('ink-mode');
+    toolbar?.classList.remove('show');
+    btnType?.classList.add('active');
+    btnDraw?.classList.remove('active');
+    if(drawTbb)drawTbb.style.background='';
+    INK.eraser=false;
+    document.getElementById('ink-eraser-btn')?.classList.remove('active');
+    document.body.style.overflow='';
+    toast('⌨️ Type mode','info');
+  }
+}
+
+/* ── Show/hide toggle when notebook opens/closes ── */
+function showInkToggle(){
+  document.getElementById('ink-mode-toggle')?.classList.add('show');
+}
+function hideInkToggle(){
+  document.getElementById('ink-mode-toggle')?.classList.remove('show');
+  document.getElementById('ink-toolbar')?.classList.remove('show');
+  if(INK.mode==='draw')setInkMode('type');
+}
+
+/* ── Canvas sizing ── */
+function resizeInkCanvas(){
+  const canvas=getInkCanvas();
+  if(!canvas)return;
+  const page=document.getElementById('the-page');
+  if(!page)return;
+  const rect=page.getBoundingClientRect();
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=rect.width*dpr;
+  canvas.height=rect.height*dpr;
+  canvas.style.width=rect.width+'px';
+  canvas.style.height=rect.height+'px';
+  INK.ctx=canvas.getContext('2d');
+  INK.ctx.scale(dpr,dpr);
+  redrawInk();
+}
+
+/* ── Load ink for current page ── */
+function loadInkPage(){
+  const nb=S.nb;if(!nb)return;
+  const pg=S.pg;
+  if(!nb.inkPages)nb.inkPages={};
+  INK.strokes=[...(nb.inkPages[pg]||[])];
+  INK.undoStack=[];
+  INK.redoStack=[];
+  redrawInk();
+}
+
+/* ── Save ink for current page ── */
+function saveInkPage(){
+  const nb=S.nb;if(!nb)return;
+  if(!nb.inkPages)nb.inkPages={};
+  nb.inkPages[S.pg]=[...INK.strokes];
+  nb.modified=new Date().toISOString();
+  save();
+}
+
+/* ── Redraw all strokes ── */
+function redrawInk(){
+  const ctx=INK.ctx;
+  if(!ctx)return;
+  const canvas=INK.canvas;
+  const dpr=window.devicePixelRatio||1;
+  ctx.clearRect(0,0,canvas.width/dpr,canvas.height/dpr);
+  INK.strokes.forEach(stroke=>drawStroke(ctx,stroke));
+}
+
+/* ── Draw a single stroke ── */
+function drawStroke(ctx,stroke){
+  if(!stroke.points||stroke.points.length<2)return;
+  ctx.save();
+
+  if(stroke.eraser){
+    ctx.globalCompositeOperation='destination-out';
+    ctx.strokeStyle='rgba(0,0,0,1)';
+    ctx.lineWidth=stroke.width*3;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.beginPath();
+    stroke.points.forEach((pt,i)=>{
+      if(i===0)ctx.moveTo(pt.x,pt.y);
+      else ctx.lineTo(pt.x,pt.y);
+    });
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  ctx.globalCompositeOperation='source-over';
+  const style=stroke.style||'ballpoint';
+  const baseWidth=stroke.width||3;
+
+  if(style==='highlight'){
+    // Highlighter — wide, semi-transparent, flat cap
+    ctx.globalAlpha=0.35;
+    ctx.strokeStyle=stroke.color;
+    ctx.lineWidth=baseWidth*4;
+    ctx.lineCap='square';
+    ctx.lineJoin='round';
+    ctx.beginPath();
+    stroke.points.forEach((pt,i)=>{
+      if(i===0)ctx.moveTo(pt.x,pt.y);
+      else ctx.lineTo(pt.x,pt.y);
+    });
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  if(style==='marker'){
+    ctx.globalAlpha=0.85;
+    ctx.strokeStyle=stroke.color;
+    ctx.lineWidth=baseWidth*2;
+    ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();
+    stroke.points.forEach((pt,i)=>{
+      if(i===0)ctx.moveTo(pt.x,pt.y);
+      else ctx.lineTo(pt.x,pt.y);
+    });
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  // Ballpoint, brush, pencil — draw segment by segment with pressure
+  ctx.lineCap='round';ctx.lineJoin='round';
+  for(let i=1;i<stroke.points.length;i++){
+    const prev=stroke.points[i-1];
+    const curr=stroke.points[i];
+    const pressure=curr.p||0.5;
+
+    let width=baseWidth;
+    let alpha=1;
+
+    if(style==='ballpoint'){
+      width=baseWidth*(0.5+pressure*0.8);
+      alpha=0.85+pressure*0.15;
+    }else if(style==='brush'){
+      width=baseWidth*(0.3+pressure*2.0);
+      alpha=0.7+pressure*0.3;
+    }else if(style==='pencil'){
+      width=baseWidth*(0.4+pressure*0.6);
+      alpha=0.5+pressure*0.4;
+      // Add slight texture variation
+      if(Math.random()>0.7)alpha*=0.7;
+    }
+
+    ctx.beginPath();
+    ctx.globalAlpha=alpha;
+    ctx.strokeStyle=stroke.color;
+    ctx.lineWidth=width;
+    ctx.moveTo(prev.x,prev.y);
+    ctx.lineTo(curr.x,curr.y);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ── Pointer event handlers ── */
+function getCanvasPoint(e){
+  const canvas=getInkCanvas();
+  if(!canvas)return{x:0,y:0,p:0.5};
+  const rect=canvas.getBoundingClientRect();
+  let clientX,clientY;
+  if(e.touches){
+    clientX=e.touches[0].clientX;
+    clientY=e.touches[0].clientY;
+  }else{
+    clientX=e.clientX;
+    clientY=e.clientY;
+  }
+  return{
+    x:clientX-rect.left,
+    y:clientY-rect.top,
+    p:e.pressure||0.5  // S Pen reports 0-1 pressure
+  };
+}
+
+function onInkPointerDown(e){
+  if(INK.mode!=='draw')return;
+  e.preventDefault();
+  e.stopPropagation();
+  INK.drawing=true;
+  INK.redoStack=[];
+  const pt=getCanvasPoint(e);
+  INK.currentStroke={
+    color:INK.eraser?'#000':INK.color,
+    width:INK.width,
+    style:INK.eraser?'eraser':INK.style,
+    eraser:INK.eraser,
+    points:[pt]
+  };
+}
+
+function onInkPointerMove(e){
+  if(!INK.drawing||INK.mode!=='draw')return;
+  e.preventDefault();
+  const pt=getCanvasPoint(e);
+  INK.currentStroke.points.push(pt);
+  // Live draw — just draw last segment for performance
+  if(INK.currentStroke.points.length>=2){
+    const pts=INK.currentStroke.points;
+    const prev=pts[pts.length-2];
+    const curr=pts[pts.length-1];
+    const tmpStroke={...INK.currentStroke,points:[prev,curr]};
+    drawStroke(INK.ctx,tmpStroke);
+  }
+}
+
+function onInkPointerUp(e){
+  if(!INK.drawing)return;
+  INK.drawing=false;
+  if(INK.currentStroke&&INK.currentStroke.points.length>1){
+    INK.strokes.push(INK.currentStroke);
+    INK.undoStack.push({...INK.currentStroke});
+    saveInkPage();
+    // Full redraw to ensure clean render
+    setTimeout(redrawInk,10);
+  }
+  INK.currentStroke=null;
+}
+
+/* ── Wire up canvas events ── */
+function initInkCanvas(){
+  const canvas=getInkCanvas();
+  if(!canvas)return;
+
+  // Pointer events (S Pen + touch + mouse)
+  canvas.addEventListener('pointerdown', onInkPointerDown,{passive:false});
+  canvas.addEventListener('pointermove', onInkPointerMove,{passive:false});
+  canvas.addEventListener('pointerup',   onInkPointerUp,  {passive:false});
+  canvas.addEventListener('pointercancel',onInkPointerUp, {passive:false});
+  canvas.addEventListener('pointerleave', onInkPointerUp, {passive:false});
+
+  // Prevent default touch behavior on canvas
+  canvas.addEventListener('touchstart', e=>e.preventDefault(),{passive:false});
+  canvas.addEventListener('touchmove',  e=>e.preventDefault(),{passive:false});
+
+  // Resize on orientation change
+  window.addEventListener('resize', ()=>{
+    if(INK.mode==='draw')resizeInkCanvas();
+  });
+}
+
+/* ── Tool setters ── */
+function setInkColor(color,el){
+  INK.color=color;
+  INK.eraser=false;
+  document.getElementById('ink-eraser-btn')?.classList.remove('active');
+  document.querySelectorAll('.ink-color').forEach(c=>c.classList.remove('active'));
+  el?.classList.add('active');
+}
+function setInkWidth(w,el){
+  INK.width=w;
+  document.querySelectorAll('.ink-width').forEach(b=>b.classList.remove('active'));
+  el?.classList.add('active');
+}
+function setInkStyle(style,el){
+  INK.style=style;
+  document.querySelectorAll('.ink-style').forEach(b=>b.classList.remove('active'));
+  el?.classList.add('active');
+}
+function toggleEraser(){
+  INK.eraser=!INK.eraser;
+  document.getElementById('ink-eraser-btn')?.classList.toggle('active',INK.eraser);
+  if(INK.eraser){
+    document.querySelectorAll('.ink-color').forEach(c=>c.classList.remove('active'));
+  }
+}
+
+/* ── Undo / Redo ── */
+function inkUndo(){
+  if(!INK.strokes.length)return;
+  const stroke=INK.strokes.pop();
+  INK.redoStack.push(stroke);
+  redrawInk();
+  saveInkPage();
+  toast('Undone ✦','info');
+}
+function inkRedo(){
+  if(!INK.redoStack.length)return;
+  const stroke=INK.redoStack.pop();
+  INK.strokes.push(stroke);
+  redrawInk();
+  saveInkPage();
+  toast('Redone ✦','info');
+}
+function clearInkPage(){
+  if(!INK.strokes.length)return;
+  if(!confirm('Clear all ink on this page?'))return;
+  INK.undoStack=[...INK.strokes];
+  INK.strokes=[];
+  redrawInk();
+  saveInkPage();
+  toast('Page cleared','info');
+}
+
+/* ── Integrate with page navigation ── */
+// Hook into the existing flipWithAnim to save+load ink on page turn
+const _origFlipWithAnim=flipWithAnim;
+flipWithAnim=function(dir){
+  if(INK.mode==='draw')saveInkPage();
+  _origFlipWithAnim(dir);
+  if(INK.mode==='draw'){
+    setTimeout(()=>{resizeInkCanvas();loadInkPage();},250);
+  }
+};
+
+// Hook into openNB to show the toggle
+const _origOpenNBInk=openNB;
+openNB=function(nb){
+  _origOpenNBInk(nb);
+  showInkToggle();
+  // Load ink for first page
+  setTimeout(()=>{
+    if(INK.mode==='draw'){resizeInkCanvas();loadInkPage();}
+  },100);
+};
+const _origCloseNBInk=closeNB;
+closeNB=function(){
+  if(INK.mode==='draw'){
+    saveInkPage();
+    setInkMode('type');
+  }
+  hideInkToggle();
+  _origCloseNBInk();
+};
+
+// Also reload ink when renderPage is called
+const _origRenderPageInk=renderPage;
+renderPage=async function(){
+  await _origRenderPageInk();
+  if(INK.mode==='draw'){
+    setTimeout(()=>{resizeInkCanvas();loadInkPage();},100);
+  }
+};
+
+
+/* ══════════════════════════════════════════════════════════
+   CALENDAR DATE PICKER
+══════════════════════════════════════════════════════════ */
+const DP = {
+  year: 0, month: 0,
+  selected: null,   // 'YYYY-MM-DD'
+  taskIdx: 0, taskLine: 0  // which task we're editing
+};
+
+function openDatePicker(taskIdx, taskLine, currentDue){
+  DP.taskIdx=taskIdx;
+  DP.taskLine=taskLine;
+  DP.selected=currentDue||null;
+  const now=new Date();
+  // Start on the month of the current due date or today
+  if(currentDue){
+    const d=new Date(currentDue+'T12:00:00');
+    DP.year=d.getFullYear();DP.month=d.getMonth();
+  }else{
+    DP.year=now.getFullYear();DP.month=now.getMonth();
+  }
+  renderDPCal();
+  openM('m-datepick');
+}
+
+function renderDPCal(){
+  const el=document.getElementById('dp-cal');
+  if(!el)return;
+  const months=['January','February','March','April','May','June',
+    'July','August','September','October','November','December'];
+  const days=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  const today=new Date();
+  const todayStr=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const firstDay=new Date(DP.year,DP.month,1).getDay();
+  const daysInMonth=new Date(DP.year,DP.month+1,0).getDate();
+
+  let h=`
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <button onclick="dpNav(-1)" style="background:none;border:1px solid rgba(201,168,76,.2);
+      border-radius:8px;color:var(--gold);cursor:pointer;padding:4px 10px;font-size:14px">‹</button>
+    <span style="font-family:var(--font-d);font-size:15px;color:var(--gold)">
+      ${months[DP.month]} ${DP.year}
+    </span>
+    <button onclick="dpNav(1)" style="background:none;border:1px solid rgba(201,168,76,.2);
+      border-radius:8px;color:var(--gold);cursor:pointer;padding:4px 10px;font-size:14px">›</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center">`;
+
+  // Day headers
+  days.forEach(d=>{
+    h+=`<div style="font-size:10px;color:rgba(201,168,76,.4);padding:3px 0;
+      font-family:var(--font-u);font-weight:600">${d}</div>`;
+  });
+
+  // Empty cells before first day
+  for(let i=0;i<firstDay;i++){
+    h+=`<div></div>`;
+  }
+
+  // Day cells
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${DP.year}-${String(DP.month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=dateStr===todayStr;
+    const isSelected=dateStr===DP.selected;
+    const isPast=dateStr<todayStr;
+    let style=`font-size:13px;padding:7px 2px;border-radius:8px;cursor:pointer;
+      font-family:var(--font-u);border:2px solid transparent;transition:all .15s;`;
+    if(isSelected){
+      style+=`background:var(--gold);color:#110a02;font-weight:700;`;
+    }else if(isToday){
+      style+=`border-color:var(--gold);color:var(--gold);font-weight:600;`;
+    }else if(isPast){
+      style+=`color:rgba(201,168,76,.25);`;
+    }else{
+      style+=`color:rgba(253,246,232,.75);`;
+    }
+    h+=`<div style="${style}" onclick="dpSelectDay('${dateStr}')">${d}</div>`;
+  }
+  h+=`</div>`;
+
+  // Show selected date
+  if(DP.selected){
+    const sd=new Date(DP.selected+'T12:00:00');
+    h+=`<div style="text-align:center;margin-top:10px;font-size:12px;
+      color:var(--gold);font-family:var(--font-u)">
+      Selected: ${sd.toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'})}
+    </div>`;
+  }
+
+  el.innerHTML=h;
+}
+
+function dpNav(dir){
+  DP.month+=dir;
+  if(DP.month<0){DP.month=11;DP.year--;}
+  if(DP.month>11){DP.month=0;DP.year++;}
+  renderDPCal();
+}
+
+function dpSelectDay(dateStr){
+  DP.selected=dateStr;
+  renderDPCal();
+}
+
+function dpQuick(daysFromNow){
+  const d=new Date();
+  d.setDate(d.getDate()+daysFromNow);
+  const dateStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  DP.selected=dateStr;
+  DP.year=d.getFullYear();DP.month=d.getMonth();
+  renderDPCal();
+  // Auto-apply for quick picks
+  dpApply();
+}
+
+function dpClear(){
+  DP.selected='';
+  dpApply();
+}
+
+function dpApply(){
+  const due=DP.selected||'';
+  const ln=(S.nb.pages[DP.taskIdx]||'').split('\n');
+  const {done,txt}=parseTodoLine(ln[DP.taskLine]||'');
+  ln[DP.taskLine]=formatTodoLine(done,txt,due);
+  S.nb.pages[DP.taskIdx]=ln.join('\n');
+  save();renderPage();
+  if(due)scheduleTaskNotification(S.nb,txt,due);
+  closeM('m-datepick');
+}
+
+/* ── Template change handler — hide draw toggle for todo ── */
+function onNBTplChange(sel){
+  const val=sel?.value||'lined';
+  const drawRow=document.getElementById('nb-prefer-draw-row');
+  if(drawRow)drawRow.style.display=val==='todo'?'none':'flex';
+}
+
 init();
 initTheme();
 loadArtLibrary();
 renderLibrarySidebar();
+initInkCanvas();
 // Check reminders after app fully loads
 setTimeout(checkAndShowStartupReminder,2500);
 </script>
