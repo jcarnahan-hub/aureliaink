@@ -561,6 +561,77 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(201,168,76,.16);border-radius:2px}
 
+/* ── FLOATING BACK BUTTON ── */
+#float-back{
+  position:fixed;bottom:calc(80px + var(--safe-bottom));left:14px;
+  z-index:50;background:rgba(17,16,9,.88);border:1px solid rgba(201,168,76,.3);
+  border-radius:24px;padding:9px 16px;cursor:pointer;
+  font-family:var(--font-u);font-size:13px;color:rgba(201,168,76,.85);
+  backdrop-filter:blur(10px);box-shadow:0 4px 18px rgba(0,0,0,.5);
+  display:none;align-items:center;gap:6px;
+  transition:opacity .2s,transform .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+#float-back:active{transform:scale(.95);}
+#float-back.show{display:flex;}
+
+/* ── TASK BADGE on notebook card ── */
+.nb-task-badge{
+  position:absolute;top:6px;left:14px;z-index:4;
+  background:var(--rose);color:#fff;
+  font-size:9px;font-weight:700;padding:2px 6px;
+  border-radius:10px;letter-spacing:.3px;
+  font-family:var(--font-u);
+}
+.nb-task-badge.overdue{background:#c0392b;}
+.nb-task-badge.today{background:#e67e22;}
+.nb-task-badge.upcoming{background:var(--sage);}
+
+/* ── DUE DATE on todo items ── */
+.todo-due{
+  font-size:10px;padding:2px 7px;border-radius:10px;
+  font-family:var(--font-u);cursor:pointer;white-space:nowrap;flex-shrink:0;
+  border:1px solid rgba(201,168,76,.25);color:rgba(201,168,76,.6);
+  background:rgba(201,168,76,.07);transition:all .15s;
+}
+.todo-due:hover{background:rgba(201,168,76,.15);color:var(--gold);}
+.todo-due.overdue{border-color:rgba(192,57,43,.4);color:#e74c3c;background:rgba(192,57,43,.1);}
+.todo-due.today{border-color:rgba(230,126,34,.4);color:#e67e22;background:rgba(230,126,34,.1);}
+
+/* ── IN-APP REMINDER POPUP ── */
+#reminder-popup{
+  position:fixed;top:0;left:0;right:0;z-index:500;
+  background:linear-gradient(135deg,#1c1509,#100c05);
+  border-bottom:2px solid rgba(201,168,76,.3);
+  padding:14px 16px;transform:translateY(-100%);
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+#reminder-popup.show{transform:translateY(0);}
+.reminder-popup-title{font-family:var(--font-d);font-size:15px;color:var(--gold);
+  margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.reminder-task-row{display:flex;align-items:center;gap:8px;padding:5px 0;
+  border-bottom:1px solid rgba(201,168,76,.08);}
+.reminder-task-row:last-child{border:none;}
+.reminder-task-nb{font-size:10px;color:rgba(201,168,76,.5);min-width:80px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.reminder-task-txt{font-family:var(--font-h);font-size:14px;color:var(--cream);flex:1;}
+.reminder-task-due{font-size:10px;color:var(--rose);font-family:var(--font-u);}
+.reminder-close{background:none;border:none;color:rgba(201,168,76,.5);
+  cursor:pointer;font-size:18px;padding:2px 6px;margin-left:auto;}
+
+/* ── REMINDER SETTINGS in notebook modal ── */
+.reminder-toggle-row{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;border-top:1px solid rgba(201,168,76,.1);margin-top:8px;}
+.toggle-switch{position:relative;width:36px;height:20px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.1);
+  border-radius:20px;cursor:pointer;transition:.3s;border:1px solid rgba(201,168,76,.2);}
+.toggle-slider::before{content:'';position:absolute;width:14px;height:14px;
+  left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.3s;}
+.toggle-switch input:checked+.toggle-slider{background:var(--gold);}
+.toggle-switch input:checked+.toggle-slider::before{transform:translateX(16px);}
+
 /* ══════════════════════════════
    WRITING LAYER — PDF stationery
    A transparent contenteditable div
@@ -742,7 +813,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         ☁️<span id="sb-sync-dot" style="position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:#666;border:1px solid rgba(0,0,0,.3)"></span>
       </button>
       <button class="sb-fbt" title="New Notebook" onclick="openNewNB()">➕</button>
-      <button class="sb-fbt" title="Settings" onclick="toast('Settings coming soon!','info')">⚙️</button>
+      <button class="sb-fbt" title="Reminder Settings" onclick="openReminderSettings()">🔔</button>
     </div>
   </aside>
 
@@ -1116,6 +1187,141 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   </div>
 </div>
 
+<!-- FLOATING BACK BUTTON -->
+<div id="float-back" onclick="floatBackAction()">
+  ← Back
+</div>
+
+<!-- IN-APP REMINDER POPUP (slides down from top on app open) -->
+<div id="reminder-popup">
+  <div class="reminder-popup-title">
+    <span>🔔</span>
+    <span id="reminder-popup-title-text">Tasks due today</span>
+    <button class="reminder-close" onclick="closeReminderPopup()">✕</button>
+  </div>
+  <div id="reminder-popup-list"></div>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <button onclick="closeReminderPopup()" style="flex:1;padding:7px;background:rgba(201,168,76,.1);
+      border:1px solid rgba(201,168,76,.2);border-radius:8px;color:var(--gold);
+      cursor:pointer;font-family:var(--font-u);font-size:11px">Dismiss</button>
+    <button onclick="closeReminderPopup(true)" style="flex:1;padding:7px;
+      background:linear-gradient(135deg,var(--gold),#a8823a);border:none;
+      border-radius:8px;color:#110a02;cursor:pointer;font-family:var(--font-u);
+      font-size:11px;font-weight:700">View Tasks ✦</button>
+  </div>
+</div>
+
+<!-- NOTIFICATION PERMISSION BANNER -->
+<div id="notif-banner" style="display:none;position:fixed;bottom:80px;left:12px;right:12px;
+  z-index:400;background:linear-gradient(135deg,#1c1509,#100c05);
+  border:1px solid rgba(201,168,76,.3);border-radius:12px;padding:12px 14px;
+  box-shadow:0 8px 28px rgba(0,0,0,.5)">
+  <div style="font-family:var(--font-d);font-size:14px;color:var(--gold);margin-bottom:6px">
+    🔔 Enable Task Reminders?
+  </div>
+  <div style="font-size:11px;color:rgba(253,246,232,.5);margin-bottom:10px;line-height:1.5">
+    Get notified about due tasks even when AureliaInk is closed.
+  </div>
+  <div style="display:flex;gap:8px">
+    <button onclick="requestNotifPermission()" style="flex:1;padding:8px;
+      background:linear-gradient(135deg,var(--gold),#a8823a);border:none;
+      border-radius:8px;color:#110a02;cursor:pointer;font-family:var(--font-u);
+      font-size:12px;font-weight:700">Allow Notifications</button>
+    <button onclick="dismissNotifBanner()" style="padding:8px 12px;background:transparent;
+      border:1px solid rgba(201,168,76,.2);border-radius:8px;color:rgba(201,168,76,.5);
+      cursor:pointer;font-family:var(--font-u);font-size:12px">Not now</button>
+  </div>
+</div>
+
+<!-- REMINDER SETTINGS MODAL -->
+<div class="modal-ov" id="m-remind">
+  <div class="modal">
+    <div class="modal-title">🔔 Reminder Settings</div>
+    <p style="font-size:11px;color:rgba(253,246,232,.45);margin-bottom:14px;line-height:1.6">
+      Set daily reminder times and notification preferences for your to-do tasks.
+    </p>
+
+    <!-- Master toggle -->
+    <div class="reminder-toggle-row" style="border-top:none;margin-top:0;padding-top:0">
+      <div>
+        <div style="font-size:13px;color:var(--cream)">Enable Reminders</div>
+        <div style="font-size:10px;color:rgba(201,168,76,.4);margin-top:2px">All reminder types</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="remind-master" onchange="saveReminderSettings()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <!-- Daily digest time -->
+    <div class="reminder-toggle-row">
+      <div>
+        <div style="font-size:12px;color:var(--cream)">📋 Daily digest</div>
+        <div style="font-size:10px;color:rgba(201,168,76,.4);margin-top:2px">Summary of all pending tasks</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="time" id="remind-daily-time" value="08:00"
+          onchange="saveReminderSettings()"
+          style="background:rgba(255,255,255,.07);border:1px solid rgba(201,168,76,.2);
+          border-radius:6px;color:var(--cream);padding:4px 8px;font-size:12px;
+          font-family:var(--font-u);outline:none">
+        <label class="toggle-switch">
+          <input type="checkbox" id="remind-daily" onchange="saveReminderSettings()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- In-app popup toggle -->
+    <div class="reminder-toggle-row">
+      <div>
+        <div style="font-size:12px;color:var(--cream)">📱 In-app popup on open</div>
+        <div style="font-size:10px;color:rgba(201,168,76,.4);margin-top:2px">Shows due tasks when you open AureliaInk</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="remind-popup" onchange="saveReminderSettings()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <!-- Push notifications toggle -->
+    <div class="reminder-toggle-row">
+      <div>
+        <div style="font-size:12px;color:var(--cream)">🔔 Push notifications</div>
+        <div style="font-size:10px;color:rgba(201,168,76,.4);margin-top:2px" id="notif-perm-status">
+          Permission not yet granted
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="remind-push" onchange="togglePushReminders()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <!-- Email toggle -->
+    <div class="reminder-toggle-row">
+      <div>
+        <div style="font-size:12px;color:var(--cream)">✉️ Email digest</div>
+        <div style="font-size:10px;color:rgba(201,168,76,.4);margin-top:2px">Requires Firebase Cloud Functions setup</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="remind-email" onchange="saveReminderSettings()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div id="email-input-row" style="display:none;margin-top:8px">
+      <input class="modal-inp" id="remind-email-addr" type="email"
+        placeholder="your@email.com" inputmode="email"
+        onchange="saveReminderSettings()">
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cxl" onclick="closeM('m-remind')">Close</button>
+      <button class="btn-pri" onclick="saveReminderSettings();closeM('m-remind')">Save ✦</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toast-wrap"></div>
 
 <script>
@@ -1263,9 +1469,10 @@ function seed(){
 function mkNB(s){
   return{id:uid(),title:s.title,folder:s.folder,cov:s.cov,emoji:s.emoji||'',
     coverImg:s.coverImg||null,
-    artPack:s.artPack||[],   // array of base64 images, auto-rotates page by page
-    artTpl:s.artTpl||'lined',// line pattern shown over artwork
-    artRot:s.artRot||'cycle',// 'cycle' or 'random'
+    artPack:s.artPack||[],
+    artTpl:s.artTpl||'lined',
+    artRot:s.artRot||'cycle',
+    remindersOn:s.remindersOn||false, // per-notebook reminder toggle
     pages:s.pages||[''],tpl:s.tpl||'lined',colId:null,colOff:0,
     created:new Date().toISOString(),modified:new Date().toISOString(),
     stamps:['']};
@@ -1484,22 +1691,99 @@ async function renderPage(){
 }
 
 /* ═══════ TODO ═══════ */
-function renderTodo(el,text,idx){
-  const lines=text.split('\n').filter(l=>l.trim());
-  let h=`<div style="overflow-y:auto;height:100%;padding-bottom:12px">`;
-  lines.forEach((ln,li)=>{
-    const done=ln.startsWith('__DONE__');
-    const txt=ln.replace(/^__(TODO|DONE)__/,'').trim()||ln;
-    h+=`<div class="todo-item"><div class="todo-check ${done?'done':''}" onclick="td(${idx},${li})"></div>
-      <input class="todo-txt ${done?'done':''}" value="${esc(txt)}" onchange="tdUpd(${idx},${li},this.value)" placeholder="Task…" style="font-family:var(--font-h);font-size:17px;color:var(--ink);border:none;outline:none;background:transparent;flex:1;width:100%;line-height:1.4;-webkit-user-select:auto;user-select:auto"></div>`;
-  });
-  h+=`<div class="todo-item"><div class="todo-check" style="border-style:dashed;opacity:.35"></div>
-    <input style="font-family:var(--font-h);font-size:17px;color:rgba(60,40,10,.35);border:none;outline:none;background:transparent;flex:1;line-height:1.4;-webkit-user-select:auto;user-select:auto" placeholder="Add task (Enter)…" onkeydown="tdAdd(event,${idx})"></div></div>`;
-  el.innerHTML=h;
+/* ── Todo data format:
+   __TODO__Task text||YYYY-MM-DD   (with optional due date after ||)
+   __DONE__Task text||YYYY-MM-DD
+── */
+function parseTodoLine(ln){
+  const done=ln.startsWith('__DONE__');
+  const rest=ln.replace(/^__(TODO|DONE)__/,'');
+  const parts=rest.split('||');
+  return {done, txt:parts[0].trim(), due:parts[1]||''};
 }
-function td(idx,li){const ln=(S.nb.pages[idx]||'').split('\n');const l=ln[li]||'';ln[li]=l.startsWith('__DONE__')?'__TODO__'+l.replace(/^__(TODO|DONE)__/,''):'__DONE__'+l.replace(/^__(TODO|DONE)__/,'');S.nb.pages[idx]=ln.join('\n');save();renderPage();}
-function tdUpd(idx,li,v){const ln=(S.nb.pages[idx]||'').split('\n');const p=(ln[li]||'').startsWith('__DONE__')?'__DONE__':'__TODO__';ln[li]=p+v;S.nb.pages[idx]=ln.join('\n');save();}
-function tdAdd(e,idx){if(e.key!=='Enter')return;const v=e.target.value.trim();if(!v)return;const ln=(S.nb.pages[idx]||'').split('\n').filter(l=>l);ln.push('__TODO__'+v);S.nb.pages[idx]=ln.join('\n');save();renderPage();}
+function formatTodoLine(done,txt,due){
+  return `${done?'__DONE__':'__TODO__'}${txt}${due?'||'+due:''}`;
+}
+function dueDateClass(due){
+  if(!due)return '';
+  const d=new Date(due); const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const dDay=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  const diff=(dDay-today)/(1000*60*60*24);
+  if(diff<0)return 'overdue';
+  if(diff===0)return 'today';
+  return 'upcoming';
+}
+function dueDateLabel(due){
+  if(!due)return '+ due date';
+  const cls=dueDateClass(due);
+  const d=new Date(due);
+  const label=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return cls==='overdue'?'⚠ '+label:cls==='today'?'Today':label;
+}
+
+function renderTodo(el,text,idx){
+  const lines=(text||'').split('\n').filter(l=>l.trim());
+  let h=`<div style="overflow-y:auto;height:100%;padding-bottom:48px">`;
+  lines.forEach((ln,li)=>{
+    const {done,txt,due}=parseTodoLine(ln);
+    const dueClass=due?dueDateClass(due):'';
+    const dueLbl=dueDateLabel(due);
+    h+=`<div class="todo-item">
+      <div class="todo-check ${done?'done':''}" onclick="td(${idx},${li})"></div>
+      <input class="todo-txt ${done?'done':''}" value="${esc(txt)}"
+        onchange="tdUpd(${idx},${li},this.value)"
+        placeholder="Task…"
+        style="font-family:var(--font-h);font-size:17px;color:var(--ink);border:none;
+        outline:none;background:transparent;flex:1;width:100%;line-height:1.4;
+        -webkit-user-select:auto;user-select:auto">
+      <span class="todo-due ${dueClass}" onclick="tdSetDue(${idx},${li},'${due}')">${esc(dueLbl)}</span>
+    </div>`;
+  });
+  h+=`<div class="todo-item">
+    <div class="todo-check" style="border-style:dashed;opacity:.35"></div>
+    <input style="font-family:var(--font-h);font-size:17px;color:rgba(60,40,10,.35);
+      border:none;outline:none;background:transparent;flex:1;line-height:1.4;
+      -webkit-user-select:auto;user-select:auto"
+      placeholder="Add task (Enter)…" onkeydown="tdAdd(event,${idx})">
+  </div></div>`;
+  el.innerHTML=h;
+  // Update badge on notebook card
+  updateTaskBadge(S.nb);
+}
+
+function td(idx,li){
+  const ln=(S.nb.pages[idx]||'').split('\n');
+  const l=ln[li]||'';
+  const {done,txt,due}=parseTodoLine(l);
+  ln[li]=formatTodoLine(!done,txt,due);
+  S.nb.pages[idx]=ln.join('\n');
+  save();renderPage();
+}
+function tdUpd(idx,li,v){
+  const ln=(S.nb.pages[idx]||'').split('\n');
+  const {done,due}=parseTodoLine(ln[li]||'');
+  ln[li]=formatTodoLine(done,v,due);
+  S.nb.pages[idx]=ln.join('\n');save();
+}
+function tdAdd(e,idx){
+  if(e.key!=='Enter')return;
+  const v=e.target.value.trim();if(!v)return;
+  const ln=(S.nb.pages[idx]||'').split('\n').filter(l=>l);
+  ln.push(formatTodoLine(false,v,''));
+  S.nb.pages[idx]=ln.join('\n');save();renderPage();
+}
+function tdSetDue(idx,li,currentDue){
+  const due=prompt('Set due date (YYYY-MM-DD) or leave blank to clear:',currentDue||'');
+  if(due===null)return; // cancelled
+  const ln=(S.nb.pages[idx]||'').split('\n');
+  const {done,txt}=parseTodoLine(ln[li]||'');
+  ln[li]=formatTodoLine(done,txt,due.trim());
+  S.nb.pages[idx]=ln.join('\n');
+  save();renderPage();
+  // Schedule notification if due date set
+  if(due.trim())scheduleTaskNotification(S.nb,txt,due.trim());
+}
 
 /* ═══════ SHELF ═══════ */
 function renderShelf(filter){
@@ -2990,7 +3274,372 @@ function applyCol(){ toast('Use 🖼 Art button to set artwork','info'); }
 function applyStn(){ openArtPicker(); }
 function saveCol(){ toast('Use 🖼 Art in the toolbar to add artwork','info'); }
 
+
+/* ══════════════════════════════════════════════════════════
+   FLOATING BACK BUTTON
+══════════════════════════════════════════════════════════ */
+function showFloatBack(action){
+  const btn=document.getElementById('float-back');
+  if(!btn)return;
+  btn.dataset.action=action||'shelf';
+  btn.classList.add('show');
+}
+function hideFloatBack(){
+  const btn=document.getElementById('float-back');
+  if(btn)btn.classList.remove('show');
+}
+function floatBackAction(){
+  const btn=document.getElementById('float-back');
+  const action=btn?.dataset.action||'shelf';
+  if(action==='shelf')closeNB();
+  else if(action==='closeModal'){
+    document.querySelectorAll('.modal-ov.active').forEach(m=>m.classList.remove('active'));
+  }
+  hideFloatBack();
+}
+
+// Show float back when notebook is open
+const _origOpenNB=openNB;
+openNB=function(nb){
+  _origOpenNB(nb);
+  showFloatBack('shelf');
+};
+const _origCloseNB=closeNB;
+closeNB=function(){
+  _origCloseNB();
+  hideFloatBack();
+};
+
+/* ══════════════════════════════════════════════════════════
+   TASK BADGE on notebook cards
+══════════════════════════════════════════════════════════ */
+function getTaskStats(nb){
+  let overdue=0,today=0,upcoming=0,total=0;
+  if(nb.tpl!=='todo')return null;
+  nb.pages.forEach(pg=>{
+    (pg||'').split('\n').filter(l=>l.trim()).forEach(ln=>{
+      const {done,due}=parseTodoLine(ln);
+      if(done)return;
+      total++;
+      if(!due)return;
+      const cls=dueDateClass(due);
+      if(cls==='overdue')overdue++;
+      else if(cls==='today')today++;
+      else upcoming++;
+    });
+  });
+  return{overdue,today,upcoming,total};
+}
+
+function updateTaskBadge(nb){
+  if(!nb)return;
+  // Find card in shelf
+  const grid=document.getElementById('nb-grid');
+  if(!grid)return;
+  // Re-render shelf to update badges
+  renderShelf(S.folder==='all'?null:S.folder);
+}
+
+// Inject task badges into shelf cards
+const _origRenderShelf=renderShelf;
+renderShelf=function(filter){
+  _origRenderShelf(filter);
+  // Add badges after render
+  const grid=document.getElementById('nb-grid');
+  if(!grid)return;
+  const cards=grid.querySelectorAll('.nb-card');
+  let cardIdx=0;
+  const nbs=filter?S.notebooks.filter(n=>n.folder===filter):S.notebooks;
+  nbs.forEach((nb,i)=>{
+    if(nb.tpl!=='todo'){cardIdx++;return;}
+    const stats=getTaskStats(nb);
+    if(!stats||stats.total===0){cardIdx++;return;}
+    const card=cards[cardIdx];
+    if(!card){cardIdx++;return;}
+    const cover=card.querySelector('.nb-cover');
+    if(!cover){cardIdx++;return;}
+    // Remove old badge
+    cover.querySelector('.nb-task-badge')?.remove();
+    const badge=document.createElement('div');
+    badge.className='nb-task-badge';
+    if(stats.overdue>0){
+      badge.classList.add('overdue');
+      badge.textContent=`${stats.overdue} overdue`;
+    }else if(stats.today>0){
+      badge.classList.add('today');
+      badge.textContent=`${stats.today} due today`;
+    }else if(stats.upcoming>0){
+      badge.classList.add('upcoming');
+      badge.textContent=`${stats.upcoming} upcoming`;
+    }
+    cover.appendChild(badge);
+    cardIdx++;
+  });
+};
+
+/* ══════════════════════════════════════════════════════════
+   REMINDER SETTINGS
+══════════════════════════════════════════════════════════ */
+const DEFAULT_REMIND={
+  master:false, daily:false, dailyTime:'08:00',
+  popup:true, push:false, email:false, emailAddr:''
+};
+
+function loadReminderSettings(){
+  try{
+    const s=localStorage.getItem('ai_remind');
+    return s?{...DEFAULT_REMIND,...JSON.parse(s)}:{...DEFAULT_REMIND};
+  }catch(e){return{...DEFAULT_REMIND};}
+}
+function saveReminderSettings(){
+  const s={
+    master:document.getElementById('remind-master')?.checked||false,
+    daily:document.getElementById('remind-daily')?.checked||false,
+    dailyTime:document.getElementById('remind-daily-time')?.value||'08:00',
+    popup:document.getElementById('remind-popup')?.checked||false,
+    push:document.getElementById('remind-push')?.checked||false,
+    email:document.getElementById('remind-email')?.checked||false,
+    emailAddr:document.getElementById('remind-email-addr')?.value||'',
+  };
+  localStorage.setItem('ai_remind',JSON.stringify(s));
+  // Show/hide email input
+  const emailRow=document.getElementById('email-input-row');
+  if(emailRow)emailRow.style.display=s.email?'block':'none';
+  // Reschedule notifications
+  if(s.master&&s.daily&&s.push)scheduleDailyDigest(s.dailyTime);
+}
+
+function openReminderSettings(){
+  closeSidebar();
+  const s=loadReminderSettings();
+  document.getElementById('remind-master').checked=s.master;
+  document.getElementById('remind-daily').checked=s.daily;
+  document.getElementById('remind-daily-time').value=s.dailyTime;
+  document.getElementById('remind-popup').checked=s.popup;
+  document.getElementById('remind-push').checked=s.push;
+  document.getElementById('remind-email').checked=s.email;
+  document.getElementById('remind-email-addr').value=s.emailAddr;
+  document.getElementById('email-input-row').style.display=s.email?'block':'none';
+  // Update permission status
+  const permStatus=document.getElementById('notif-perm-status');
+  if(permStatus){
+    const perm=Notification?.permission||'default';
+    permStatus.textContent=perm==='granted'?'✓ Notifications allowed'
+      :perm==='denied'?'✗ Blocked — check browser settings'
+      :'Permission not yet granted';
+    permStatus.style.color=perm==='granted'?'var(--sage)':perm==='denied'?'var(--rose)':'';
+  }
+  openM('m-remind');
+}
+
+async function togglePushReminders(){
+  const checkbox=document.getElementById('remind-push');
+  if(checkbox.checked){
+    await requestNotifPermission();
+  }
+  saveReminderSettings();
+}
+
+async function requestNotifPermission(){
+  if(!('Notification' in window)){
+    toast('Notifications not supported in this browser','info');
+    return false;
+  }
+  if(Notification.permission==='granted'){
+    toast('Notifications already enabled ✦','ok');
+    return true;
+  }
+  const result=await Notification.requestPermission();
+  if(result==='granted'){
+    toast('Notifications enabled ✦','ok');
+    dismissNotifBanner();
+    // Send a test notification
+    setTimeout(()=>{
+      new Notification('AureliaInk ✦',{
+        body:'Reminders are now active! You\'ll be notified about due tasks.',
+        icon:'/favicon.ico'
+      });
+    },500);
+    return true;
+  }else{
+    toast('Notifications blocked — enable in browser settings','info');
+    const ch=document.getElementById('remind-push');
+    if(ch)ch.checked=false;
+    return false;
+  }
+}
+
+function dismissNotifBanner(){
+  const b=document.getElementById('notif-banner');
+  if(b)b.style.display='none';
+  localStorage.setItem('ai_notif_banner_dismissed','1');
+}
+
+/* ══════════════════════════════════════════════════════════
+   PUSH NOTIFICATIONS — per task + daily digest
+══════════════════════════════════════════════════════════ */
+function scheduleTaskNotification(nb,taskTxt,dueDate){
+  const s=loadReminderSettings();
+  if(!s.master||!s.push)return;
+  if(Notification?.permission!=='granted')return;
+
+  const due=new Date(dueDate+'T09:00:00'); // 9am on due date
+  const now=new Date();
+  const ms=due-now;
+  if(ms<0)return; // already past
+
+  // Schedule via setTimeout (works while app is open)
+  // For background notifications we'd need a service worker
+  setTimeout(()=>{
+    if(Notification?.permission==='granted'){
+      new Notification(`AureliaInk — Task Due ✦`,{
+        body:`"${taskTxt}" is due today!\nFrom: ${nb.title}`,
+        icon:'/favicon.ico',
+        tag:`task-${nb.id}-${dueDate}`,
+      });
+    }
+  },ms);
+
+  // Also schedule day-before reminder
+  const dayBefore=ms-(24*60*60*1000);
+  if(dayBefore>0){
+    setTimeout(()=>{
+      if(Notification?.permission==='granted'){
+        new Notification(`AureliaInk — Reminder ✦`,{
+          body:`"${taskTxt}" is due tomorrow.\nFrom: ${nb.title}`,
+          icon:'/favicon.ico',
+          tag:`task-tomorrow-${nb.id}-${dueDate}`,
+        });
+      }
+    },dayBefore);
+  }
+}
+
+function scheduleDailyDigest(timeStr){
+  // Calculate ms until next occurrence of timeStr
+  const [h,m]=(timeStr||'08:00').split(':').map(Number);
+  const now=new Date();
+  const next=new Date(now);
+  next.setHours(h,m,0,0);
+  if(next<=now)next.setDate(next.getDate()+1);
+  const ms=next-now;
+
+  clearTimeout(window._dailyDigestTimer);
+  window._dailyDigestTimer=setTimeout(()=>{
+    sendDailyDigest();
+    // Reschedule for next day
+    scheduleDailyDigest(timeStr);
+  },ms);
+}
+
+function sendDailyDigest(){
+  const s=loadReminderSettings();
+  if(!s.master||!s.daily)return;
+
+  const due=getAllDueTasks();
+  if(!due.length)return;
+
+  // Push notification
+  if(s.push&&Notification?.permission==='granted'){
+    const overdue=due.filter(t=>t.cls==='overdue').length;
+    const today=due.filter(t=>t.cls==='today').length;
+    let body=`You have ${due.length} pending task${due.length!==1?'s':''}`;
+    if(overdue)body+=` (${overdue} overdue!)`;
+    if(today)body+=` (${today} due today)`;
+    new Notification('AureliaInk Daily Digest ✦',{
+      body,icon:'/favicon.ico',tag:'daily-digest'
+    });
+  }
+
+  // In-app popup
+  if(s.popup)showReminderPopup(due);
+}
+
+function getAllDueTasks(){
+  const tasks=[];
+  S.notebooks.forEach(nb=>{
+    if(nb.tpl!=='todo')return;
+    nb.pages.forEach(pg=>{
+      (pg||'').split('\n').filter(l=>l.trim()).forEach(ln=>{
+        const {done,txt,due}=parseTodoLine(ln);
+        if(done||!due)return;
+        const cls=dueDateClass(due);
+        if(cls==='overdue'||cls==='today'){
+          tasks.push({nb,txt,due,cls});
+        }
+      });
+    });
+  });
+  // Sort: overdue first, then today
+  return tasks.sort((a,b)=>a.cls==='overdue'?-1:1);
+}
+
+/* ══════════════════════════════════════════════════════════
+   IN-APP POPUP
+══════════════════════════════════════════════════════════ */
+function showReminderPopup(tasks){
+  if(!tasks||!tasks.length)return;
+  const popup=document.getElementById('reminder-popup');
+  const list=document.getElementById('reminder-popup-list');
+  const title=document.getElementById('reminder-popup-title-text');
+  if(!popup||!list)return;
+
+  const overdue=tasks.filter(t=>t.cls==='overdue').length;
+  const today=tasks.filter(t=>t.cls==='today').length;
+  title.textContent=overdue?`${overdue} overdue task${overdue!==1?'s':''}`
+    :`${today} task${today!==1?'s':''} due today`;
+
+  list.innerHTML='';
+  tasks.slice(0,5).forEach(t=>{
+    const row=document.createElement('div');
+    row.className='reminder-task-row';
+    row.innerHTML=`
+      <span class="reminder-task-nb">${esc(t.nb.title)}</span>
+      <span class="reminder-task-txt">${esc(t.txt)}</span>
+      <span class="reminder-task-due">${t.cls==='overdue'?'Overdue':'Today'}</span>`;
+    row.onclick=()=>{closeReminderPopup();openNB(t.nb);};
+    list.appendChild(row);
+  });
+  if(tasks.length>5){
+    const more=document.createElement('div');
+    more.style.cssText='font-size:10px;color:rgba(201,168,76,.4);text-align:center;padding:6px 0';
+    more.textContent=`+${tasks.length-5} more tasks`;
+    list.appendChild(more);
+  }
+
+  popup.classList.add('show');
+}
+
+function closeReminderPopup(openTasks){
+  document.getElementById('reminder-popup')?.classList.remove('show');
+  if(openTasks){
+    // Navigate to first todo notebook
+    const tasks=getAllDueTasks();
+    if(tasks.length)openNB(tasks[0].nb);
+  }
+}
+
+function checkAndShowStartupReminder(){
+  const s=loadReminderSettings();
+  if(!s.master||!s.popup)return;
+  const tasks=getAllDueTasks();
+  if(tasks.length){
+    setTimeout(()=>showReminderPopup(tasks),2000); // delay until app loaded
+  }
+  // Schedule daily digest
+  if(s.daily&&s.push)scheduleDailyDigest(s.dailyTime);
+  // Show notification permission banner if not yet asked
+  if(!s.push&&Notification?.permission==='default'&&
+     !localStorage.getItem('ai_notif_banner_dismissed')){
+    setTimeout(()=>{
+      const b=document.getElementById('notif-banner');
+      if(b)b.style.display='block';
+    },3500);
+  }
+}
 init();
+// Check reminders after app fully loads
+setTimeout(checkAndShowStartupReminder,2500);
 </script>
 </body>
 </html>
