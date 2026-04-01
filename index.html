@@ -42,7 +42,181 @@
   --font-u:'DM Sans',sans-serif;
   --bar-h:52px; --flip-h:58px;
   --safe-bottom:env(safe-area-inset-bottom,0px);
+  /* Theme transition */
+  --theme-transition:background .4s ease,color .4s ease,border-color .3s ease;
 }
+
+/* ── WARM PARCHMENT LIGHT THEME ── */
+body.light-theme {
+  --gold:#8b5e1a;
+  --gold-lt:#b87d2a;
+  --gold-dim:rgba(139,94,26,.15);
+  --deep:#f0e8d5;
+  --sidebar-bg:#e8dcc8;
+  --page-bg:#fff9ef;
+  --ink:#2a1e0c;
+  --cream:#2a1e0c;
+  --sage:#4a7a50;
+  --rose:#a0523a;
+}
+body.light-theme,
+body.light-theme html{
+  background:var(--deep);
+  color:var(--cream);
+}
+/* Starfield in light mode — amber dust motes instead of white stars */
+body.light-theme .sf{
+  background:radial-gradient(ellipse at 30% 50%,#f5e8c8 0%,#ede0c0 45%,#e5d5a8 100%);
+}
+body.light-theme .star{
+  background:#c8922a;
+  opacity:.4;
+}
+/* Sidebar light */
+body.light-theme .sidebar{
+  background:linear-gradient(180deg,#e8dcc8 0%,#ddd0b8 100%);
+  border-right:1px solid rgba(139,94,26,.2);
+}
+body.light-theme .sb-title{color:var(--gold);}
+body.light-theme .sb-tag{color:rgba(139,94,26,.5);}
+body.light-theme .sb-search input{
+  background:rgba(0,0,0,.05);
+  border-color:rgba(139,94,26,.25);
+  color:#2a1e0c;
+}
+body.light-theme .sb-search input::placeholder{color:rgba(139,94,26,.4);}
+body.light-theme .fi:hover{background:rgba(139,94,26,.08);}
+body.light-theme .fi.active{background:rgba(139,94,26,.14);}
+body.light-theme .fi-name{color:rgba(42,30,12,.85);}
+body.light-theme .fi-cnt{background:rgba(139,94,26,.12);color:var(--gold);}
+body.light-theme .sec-lbl{color:rgba(139,94,26,.45);}
+body.light-theme .sb-div{background:rgba(139,94,26,.15);}
+body.light-theme .sb-fbt{
+  background:rgba(0,0,0,.06);
+  border-color:rgba(139,94,26,.2);
+  color:#2a1e0c;
+}
+body.light-theme .sb-fbt:hover{background:rgba(139,94,26,.12);}
+/* Topbar light */
+body.light-theme .topbar{
+  background:rgba(232,220,200,.9);
+  border-bottom:1px solid rgba(139,94,26,.15);
+}
+body.light-theme .tb-title{color:#2a1e0c;}
+body.light-theme .tb-menu-btn{color:rgba(139,94,26,.7);}
+body.light-theme .dt-badge{
+  background:rgba(139,94,26,.1);
+  border-color:rgba(139,94,26,.2);
+  color:rgba(139,94,26,.7);
+}
+body.light-theme .sync-badge{color:var(--sage);}
+/* Notebook bar light */
+body.light-theme .nb-bar{background:rgba(220,208,188,.88);}
+body.light-theme .tpl-bar{background:rgba(210,198,178,.8);}
+body.light-theme .nb-back{
+  border-color:rgba(139,94,26,.25);
+  color:rgba(139,94,26,.8);
+}
+body.light-theme .tbb{
+  border-color:rgba(139,94,26,.2);
+  color:rgba(139,94,26,.6);
+}
+body.light-theme .tpl-chip{
+  border-color:rgba(139,94,26,.25);
+  color:rgba(139,94,26,.5);
+}
+body.light-theme .tpl-chip.active{
+  background:rgba(139,94,26,.12);
+  border-color:var(--gold);
+  color:var(--gold);
+}
+/* Page reader light */
+body.light-theme .page-reader{
+  background:radial-gradient(ellipse at center,#e8d8b8 0%,#d8c8a0 100%);
+}
+body.light-theme .the-page{
+  box-shadow:0 8px 40px rgba(100,70,20,.25),0 2px 8px rgba(100,70,20,.15);
+}
+/* Flip controls light */
+body.light-theme .flip-row{background:rgba(210,198,178,.95);}
+body.light-theme .flip-prev,body.light-theme .flip-next{
+  background:rgba(139,94,26,.1);
+  border-color:rgba(139,94,26,.3);
+  color:var(--gold);
+}
+body.light-theme .pg-ind{color:rgba(139,94,26,.7);}
+body.light-theme .pg-ind-sub{color:rgba(139,94,26,.4);}
+/* Modals light */
+body.light-theme .modal{
+  background:linear-gradient(135deg,#ede6d6,#e5d8c5);
+  border-color:rgba(139,94,26,.25);
+}
+body.light-theme .modal-title{color:var(--gold);}
+body.light-theme .modal-lbl{color:rgba(139,94,26,.6);}
+body.light-theme .modal-inp{
+  background:rgba(255,255,255,.5);
+  border-color:rgba(139,94,26,.25);
+  color:#2a1e0c;
+}
+body.light-theme .btn-cxl{
+  border-color:rgba(139,94,26,.25);
+  color:rgba(139,94,26,.65);
+}
+/* Toast light */
+body.light-theme .toast{
+  background:rgba(232,220,200,.97);
+  border-color:rgba(139,94,26,.2);
+  color:#2a1e0c;
+}
+/* Auto-loop bar light */
+body.light-theme .auto-btn{
+  border-color:rgba(139,94,26,.25);
+  color:rgba(139,94,26,.6);
+}
+/* Peek button light */
+body.light-theme #toolbar-peek{
+  background:rgba(220,208,188,.9);
+  border-color:rgba(139,94,26,.3);
+  color:rgba(139,94,26,.8);
+}
+/* Float back button light */
+body.light-theme #float-back{
+  background:rgba(220,208,188,.95);
+  border-color:rgba(139,94,26,.35);
+  color:rgba(139,94,26,.9);
+}
+/* Quick note panel light */
+body.light-theme #qn-panel{
+  background:linear-gradient(180deg,#e8dcc8 0%,#ddd0b8 100%);
+  border-left:1px solid rgba(139,94,26,.2);
+}
+body.light-theme .qn-title{color:var(--gold);}
+body.light-theme .qn-compose{
+  background:rgba(255,255,255,.3);
+  border-color:rgba(139,94,26,.15);
+}
+body.light-theme .qni{
+  background:rgba(255,255,255,.25);
+  border-color:rgba(139,94,26,.12);
+}
+body.light-theme .qni-txt{color:#2a1e0c;}
+/* Shelf light */
+body.light-theme .shelf-title{color:var(--gold);}
+body.light-theme .shelf-sub{color:rgba(42,30,12,.45);}
+body.light-theme .add-nb{
+  border-color:rgba(139,94,26,.25);
+  color:rgba(139,94,26,.45);
+}
+/* Theme toggle button */
+.theme-toggle{
+  position:fixed;top:8px;right:60px;z-index:300;
+  background:transparent;border:none;cursor:pointer;
+  font-size:18px;padding:6px;border-radius:8px;
+  transition:transform .3s;
+  -webkit-tap-highlight-color:transparent;
+  line-height:1;
+}
+.theme-toggle:hover{transform:rotate(20deg);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:var(--deep)}
 body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
@@ -836,6 +1010,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <span id="sync-lbl">Synced</span>
       </div>
       <div class="dt-badge" id="dt-badge"></div>
+      <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Switch theme">🌙</button>
     </div>
 
     <!-- SHELF -->
@@ -3641,7 +3816,55 @@ function checkAndShowStartupReminder(){
     },3500);
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   THEME SYSTEM — Dark (starfield) ↔ Light (parchment)
+══════════════════════════════════════════════════════════ */
+function applyTheme(mode){
+  const body=document.body;
+  const btn=document.getElementById('theme-btn');
+  const sf=document.getElementById('sf');
+
+  if(mode==='light'){
+    body.classList.add('light-theme');
+    if(btn)btn.textContent='☀️';
+    // Recolor existing stars to warm amber
+    document.querySelectorAll('.star').forEach(s=>{
+      s.style.background='#c8922a';
+    });
+    // Change page reader glow
+    document.querySelectorAll('.page-reader').forEach(pr=>{
+      pr.style.background='radial-gradient(ellipse at center,#e8d8b8 0%,#d8c8a0 100%)';
+    });
+  }else{
+    body.classList.remove('light-theme');
+    if(btn)btn.textContent='🌙';
+    // Restore white stars
+    document.querySelectorAll('.star').forEach(s=>{
+      s.style.background='#fff';
+    });
+    // Restore dark page reader
+    document.querySelectorAll('.page-reader').forEach(pr=>{
+      pr.style.background='';
+    });
+  }
+  localStorage.setItem('ai_theme',mode);
+}
+
+function toggleTheme(){
+  const current=localStorage.getItem('ai_theme')||'dark';
+  const next=current==='dark'?'light':'dark';
+  applyTheme(next);
+  toast(next==='light'?'☀️ Warm parchment mode':'🌙 Starfield mode','info');
+}
+
+function initTheme(){
+  const saved=localStorage.getItem('ai_theme')||'dark';
+  applyTheme(saved);
+}
+
 init();
+initTheme();
 // Check reminders after app fully loads
 setTimeout(checkAndShowStartupReminder,2500);
 </script>
