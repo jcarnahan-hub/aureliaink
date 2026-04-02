@@ -1,3 +1,13 @@
+/* ── Close sidebar when clicking main content area ── */
+function handleMainClick(e){
+  const sb=document.getElementById('sidebar');
+  if(!sb)return;
+  // Only close if sidebar is open (drawer mode)
+  if(sb.classList.contains('open')){
+    closeSidebar();
+  }
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -263,7 +273,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 #sb-overlay{
   position:fixed;
   top:0;
-  left:300px;  /* starts AFTER the sidebar — can never cover it */
+  left:300px;  /* starts AFTER sidebar width */
   right:0;
   bottom:0;
   background:rgba(0,0,0,.5);
@@ -271,8 +281,13 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   display:none;
   backdrop-filter:blur(2px);
   -webkit-tap-highlight-color:transparent;
+  cursor:pointer;
 }
 #sb-overlay.show{display:block}
+/* On desktop sidebar is always visible — clicking .main closes it */
+@media(min-width:1100px){
+  #sb-overlay{display:none!important}
+}
 
 .sb-logo{padding:18px 18px 12px;border-bottom:1px solid rgba(201,168,76,.15);
   background:linear-gradient(135deg,rgba(201,168,76,.09),transparent);
@@ -376,6 +391,10 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 
 /* ══ MAIN ══ */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+/* Desktop: clicking main area closes sidebar */
+@media(min-width:1100px){
+  .main{cursor:default}
+}
 
 /* Top bar */
 .topbar{display:flex;align-items:center;gap:10px;padding:0 14px;
@@ -936,6 +955,13 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 .lib-img-num{position:absolute;bottom:0;left:0;right:0;
   background:rgba(0,0,0,.55);color:rgba(255,255,255,.7);
   font-size:8px;text-align:center;padding:2px;font-family:var(--font-u)}
+#lib-content::-webkit-scrollbar{width:6px}
+#lib-content::-webkit-scrollbar-track{background:rgba(201,168,76,.06);border-radius:3px}
+#lib-content::-webkit-scrollbar-thumb{background:rgba(201,168,76,.35);border-radius:3px}
+#lib-content::-webkit-scrollbar-thumb:hover{background:rgba(201,168,76,.55)}
+#lib-pick-content::-webkit-scrollbar{width:6px}
+#lib-pick-content::-webkit-scrollbar-track{background:rgba(201,168,76,.06);border-radius:3px}
+#lib-pick-content::-webkit-scrollbar-thumb{background:rgba(201,168,76,.35);border-radius:3px}
 .lib-add-col{border:2px dashed rgba(201,168,76,.25);border-radius:8px;
   padding:10px;text-align:center;cursor:pointer;color:rgba(201,168,76,.4);
   font-size:12px;transition:all .2s;margin-bottom:12px}
@@ -1226,7 +1252,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   </aside>
 
   <!-- ══ MAIN ══ -->
-  <main class="main">
+  <main class="main" onclick="handleMainClick(event)">
     <!-- Top bar -->
     <div class="topbar">
       <button class="tb-menu-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
@@ -1461,7 +1487,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   <div class="modal">
     <div class="modal-title">🖼 Page Artwork Pack</div>
     <p style="font-size:11px;color:rgba(253,246,232,.45);margin-bottom:12px;line-height:1.6">
-      Upload up to <strong style="color:var(--gold)">20 images</strong> — they auto-rotate page by page,
+      Upload as many images as you like — they auto-rotate page by page,
       just like your old PDF stationery. Add one image for a single repeated background,
       or a full set for a different illustration on every page.
     </p>
@@ -1498,6 +1524,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <button class="tpl-chip"        data-tpl="grid"    onclick="selectArtTpl(this,'grid')">Grid</button>
       <button class="tpl-chip"        data-tpl="blank"   onclick="selectArtTpl(this,'blank')">No lines</button>
       <button class="tpl-chip"        data-tpl="cornell" onclick="selectArtTpl(this,'cornell')">Cornell</button>
+      <button class="tpl-chip"        data-tpl="todo"    onclick="selectArtTpl(this,'todo')">✅ To-Do</button>
     </div>
 
     <div class="modal-foot">
@@ -1543,7 +1570,9 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         onchange="handleLibUpload(event)">
 
       <!-- Library content -->
-      <div id="lib-content" style="max-height:380px;overflow-y:auto"></div>
+      <div id="lib-content" style="max-height:380px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(201,168,76,.4) rgba(201,168,76,.08);
+    padding-right:4px"></div>
     </div>
 
     <!-- APPLY TAB -->
@@ -1582,6 +1611,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <button class="tpl-chip"        data-tpl="grid"    onclick="selectArtTpl(this,'grid')">Grid</button>
         <button class="tpl-chip"        data-tpl="blank"   onclick="selectArtTpl(this,'blank')">No lines</button>
         <button class="tpl-chip"        data-tpl="cornell" onclick="selectArtTpl(this,'cornell')">Cornell</button>
+        <button class="tpl-chip"        data-tpl="todo"    onclick="selectArtTpl(this,'todo')">✅ To-Do</button>
       </div>
 
       <div class="modal-foot">
@@ -3709,7 +3739,7 @@ window.autoSave=function(){
    always aligns perfectly — no calibration needed.
 ══════════════════════════════════════════════════════════ */
 
-const MAX_PACK = 20;
+const MAX_PACK = 9999; // No limit — personal use app
 let pendingArtPack = [];   // array of {dataURL, name} being built
 let pendingArtTpl  = 'lined';
 let pendingArtRot  = 'cycle';
@@ -3748,7 +3778,7 @@ function renderPackGrid(){
   const grid=document.getElementById('art-pack-grid');
   const counter=document.getElementById('art-pack-count');
   if(!grid)return;
-  if(counter)counter.textContent=`(${pendingArtPack.length} / ${MAX_PACK})`;
+  if(counter)counter.textContent=`(${pendingArtPack.length} image${pendingArtPack.length!==1?'s':''})`;
 
   grid.innerHTML='';
   pendingArtPack.forEach((item,idx)=>{
