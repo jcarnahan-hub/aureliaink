@@ -18,12 +18,16 @@
            signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc,
            collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, uploadString,
+           getDownloadURL, deleteObject, listAll }
+           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
   window._fbModules = {
     initializeApp, getAnalytics,
     getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
     signOut, onAuthStateChanged,
     GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-    getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc
+    getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc,
+    getStorage, ref, uploadBytes, uploadString, getDownloadURL, deleteObject, listAll
   };
 </script>
 <!-- PWA manifest injected dynamically -->
@@ -474,11 +478,16 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 .nb-back:hover{background:rgba(201,168,76,.1);color:var(--gold)}
 .nb-nb-title{font-family:var(--font-d);font-size:14px;color:var(--cream);
   flex:1;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.tbb{background:transparent;border:1px solid rgba(201,168,76,.15);border-radius:8px;
-  padding:5px 8px;cursor:pointer;color:rgba(201,168,76,.55);
-  transition:all .15s;white-space:nowrap;font-family:var(--font-u);font-size:10px;flex-shrink:0}
-.tbb:hover,.tbb:active{background:rgba(201,168,76,.1);color:var(--gold);border-color:rgba(201,168,76,.35)}
+.tbb{background:transparent;border:1px solid rgba(201,168,76,.2);border-radius:8px;
+  padding:4px 8px;cursor:pointer;color:rgba(201,168,76,.8);
+  transition:all .15s;white-space:nowrap;font-family:var(--font-u);font-size:10px;
+  flex-shrink:0;display:inline-flex;flex-direction:column;align-items:center;gap:1px;min-width:42px}
+.tbb:hover,.tbb:active{background:rgba(201,168,76,.12);color:var(--gold);border-color:rgba(201,168,76,.4)}
 .tbb.on{background:rgba(201,168,76,.16);color:var(--gold);border-color:var(--gold)}
+.tbb-ico{font-size:15px;line-height:1.2}
+.tbb-lbl{font-size:8px;letter-spacing:.3px;color:rgba(201,168,76,.55);font-weight:500;
+  text-transform:uppercase;font-family:var(--font-u)}
+.tbb:hover .tbb-lbl,.tbb.on .tbb-lbl{color:var(--gold)}
 
 /* Template chips row */
 .tpl-bar{display:flex;gap:5px;padding:6px 12px;
@@ -519,10 +528,11 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   touch-action:pan-y;
 }
 /* Slight rounding only on larger screens where there's room */
-@media(min-width:600px){
+@media(min-width:600px) and (max-width:1099px){
+  /* Tablets in portrait — slight rounding, max width keeps it readable */
   .the-page{
-    max-width:560px;
-    border-radius:8px;
+    max-width:680px;
+    border-radius:6px;
     box-shadow:0 4px 24px rgba(0,0,0,.5);
     align-self:center;
   }
@@ -1105,11 +1115,11 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   padding:22px 10px 6px; /* tight — pg-head is now only ~22px */
   background:transparent;border:none;outline:none;resize:none;
   font-family:var(--font-h);font-size:17px;line-height:32px;
-  color:var(--ink);caret-color:var(--rose);
+  color:#1a0c02;caret-color:#c0392b;
   -webkit-user-select:auto;user-select:auto;
   z-index:4;width:100%;height:100%;box-sizing:border-box;
 }
-#plain-textarea::placeholder{color:rgba(60,40,10,.22);}
+#plain-textarea::placeholder{color:rgba(26,12,2,.35);}
 
 /* Writing mode indicator pill */
 .write-mode-pill{
@@ -1289,13 +1299,13 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <div class="nb-bar" id="nb-bar">
         <button class="nb-back" onclick="closeNB()">← Back</button>
         <div class="nb-nb-title" id="nb-ttl">—</div>
-        <button class="tbb" id="view-btn" onclick="toggleClean()">🖼 Art</button>
-        <button class="tbb" id="art-btn" onclick="openArtPicker()" title="Set page artwork">🖼 Art</button>
-        <button class="tbb" id="draw-mode-tbb" onclick="setInkMode('draw')" title="Draw with stylus">🖊</button>
-        <button class="tbb" onclick="addPage()">＋</button>
-        <button class="tbb" onclick="toast('Bookmarked ✦','ok')">🔖</button>
-        <button class="tbb" onclick="openExport()" title="Export to PDF">📤 PDF</button>
-        <button class="tbb" id="cal-btn-tog" onclick="toggleCalibration()" title="Align text to PDF lines" style="display:none">📐 Align</button>
+        <button class="tbb" id="view-btn" onclick="toggleClean()" title="Toggle artwork"><span class="tbb-ico">🖼</span><span class="tbb-lbl">Art</span></button>
+        <button class="tbb" id="art-btn" onclick="openArtPicker()" title="Set page artwork"><span class="tbb-ico">🎨</span><span class="tbb-lbl">Artwork</span></button>
+        <button class="tbb" id="draw-mode-tbb" onclick="setInkMode('draw')" title="Draw with stylus"><span class="tbb-ico">🖊</span><span class="tbb-lbl">Draw</span></button>
+        <button class="tbb" onclick="addPage()" title="Add new page"><span class="tbb-ico">＋</span><span class="tbb-lbl">Page</span></button>
+        <button class="tbb" onclick="deletePage()" title="Delete current page"><span class="tbb-ico">🗑</span><span class="tbb-lbl">Delete</span></button>
+        <button class="tbb" onclick="openExport()" title="Export to PDF"><span class="tbb-ico">📤</span><span class="tbb-lbl">Export</span></button>
+        <button class="tbb" id="cal-btn-tog" onclick="toggleCalibration()" title="Align text to PDF lines" style="display:none"><span class="tbb-ico">📐</span><span class="tbb-lbl">Align</span></button>
       </div>
 
       <!-- Template bar -->
@@ -1508,7 +1518,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 
     <!-- Add images button -->
     <div class="up-drop" id="art-drop"
-      onclick="document.getElementById('art-file').click()"
+      onclick="document.getElementById('art-file').value='';document.getElementById('art-file').click()"
       style="height:64px;margin-bottom:12px">
       <div class="u-ico" style="font-size:18px">＋</div>
       <p id="art-drop-lbl">Tap to add images (PNG, JPG, WebP)</p>
@@ -1658,6 +1668,20 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <br><br>
       <span style="color:rgba(201,168,76,.4);font-size:10px">Project: aureliainkstudios</span>
       </p>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <div style="flex:1;padding:8px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.15);
+          border-radius:8px;text-align:center">
+          <div style="font-size:18px">☁️</div>
+          <div style="font-size:9px;color:rgba(201,168,76,.5);font-family:var(--font-u);margin-top:2px">Firestore</div>
+          <div style="font-size:10px;color:var(--sage);font-weight:600">Active</div>
+        </div>
+        <div style="flex:1;padding:8px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.15);
+          border-radius:8px;text-align:center" id="storage-status-card">
+          <div style="font-size:18px">🖼</div>
+          <div style="font-size:9px;color:rgba(201,168,76,.5);font-family:var(--font-u);margin-top:2px">Storage</div>
+          <div style="font-size:10px;color:var(--sage);font-weight:600" id="storage-status-txt">Active</div>
+        </div>
+      </div>
       <button class="btn-pri" onclick="fbSyncNow()" style="width:100%;margin-bottom:8px">☁️ Sync Now</button>
       <button class="btn-cxl" onclick="fbSignOut()" style="width:100%">Sign Out</button>
     </div>
@@ -1828,7 +1852,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 </div>
 
 <!-- DATE PICKER MODAL -->
-<div class="modal-ov" id="m-datepick">
+<div class="modal-ov" id="m-datepick" style="z-index:600">
   <div class="modal" style="max-width:340px">
     <div class="modal-title">📅 Set Due Date</div>
     <div id="dp-cal" style="margin-bottom:14px"></div>
@@ -1992,9 +2016,9 @@ function init(){
     if(ld){
       ld.classList.add('out');
       // After fade completes, remove from DOM flow entirely
-      setTimeout(()=>ld.classList.add('gone'),700);
+      setTimeout(()=>ld.classList.add('gone'),900);
     }
-  },1800);
+  },2800); // 2.8s display time — enough to appreciate the icon
 
   document.getElementById('si')?.addEventListener('input',doSearch);
   document.getElementById('si')?.addEventListener('blur',()=>setTimeout(()=>document.getElementById('sr').classList.remove('vis'),200));
@@ -2694,6 +2718,18 @@ function addPage(){
   S.pg=nb.pages.length-1;save();renderPage();toast('New page added ✦','ok');
 }
 
+function deletePage(){
+  const nb=S.nb;if(!nb)return;
+  if(nb.pages.length<=1){toast('Cannot delete the only page','info');return;}
+  if(!confirm(`Delete page ${S.pg+1} of ${nb.pages.length}? This cannot be undone.`))return;
+  nb.pages.splice(S.pg,1);
+  if(nb.stamps)nb.stamps.splice(S.pg,1);
+  if(nb.inkPages)delete nb.inkPages[String(S.pg)];
+  S.pg=Math.max(0,Math.min(S.pg,nb.pages.length-1));
+  save();renderPage();
+  toast(`Page deleted — ${nb.pages.length} page${nb.pages.length!==1?'s':''} remaining`,'ok');
+}
+
 /* ═══════ TEMPLATE ═══════ */
 function setTpl(el,tpl){
   autoSave();
@@ -2715,8 +2751,11 @@ function autoSave(){
   const nb=S.nb;if(!nb)return;const i=S.pg;
   if(S.tpl!=='todo'){while(nb.pages.length<=i)nb.pages.push('');nb.pages[i]=document.getElementById('pg-ta')?.value||'';}
   nb.modified=new Date().toISOString();nb.tpl=S.tpl;save();
-  const lbl=document.getElementById('sync-lbl');lbl.textContent='Saving…';
-  clearTimeout(autoSave._t);autoSave._t=setTimeout(()=>{lbl.textContent='Synced';},900);
+  // Silently update label — no toast, no flash
+  const lbl=document.getElementById('sync-lbl');
+  if(lbl){lbl.textContent='Saving…';
+    clearTimeout(autoSave._t);
+    autoSave._t=setTimeout(()=>{lbl.textContent='Synced';},600);}
 }
 
 /* ═══════ CREATE NB ═══════ */
@@ -2914,20 +2953,20 @@ self.addEventListener('fetch',e=>{
 /* ══════════════════════════════════════════════════════════
    COVER IMAGE UPLOAD
 ══════════════════════════════════════════════════════════ */
-function handleCoverImg(e){
+async function handleCoverImg(e){
   const file=e.target.files[0];if(!file)return;
-  if(file.size>5*1024*1024){toast('Image too large — please use under 5MB','info');return;}
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    const dataURL=ev.target.result;
-    document.getElementById('m-nb-coverimg').value=dataURL;
-    // Show preview
-    const preview=document.getElementById('cover-upload-preview');
-    preview.innerHTML=`<img src="${dataURL}" alt="cover"><div class="overlay">📷 Change photo</div>`;
-    // Re-attach click
-    preview.onclick=()=>document.getElementById('cover-img-file').click();
-  };
-  reader.readAsDataURL(file);
+  if(file.size>8*1024*1024){toast('Image too large — please use under 8MB','info');return;}
+  // Show local preview immediately
+  const localURL=URL.createObjectURL(file);
+  const preview=document.getElementById('cover-upload-preview');
+  preview.innerHTML=`<img src="${localURL}" alt="cover" style="width:100%;height:100%;object-fit:cover"><div class="overlay">📷 Change photo</div>`;
+  preview.onclick=()=>document.getElementById('cover-img-file').click();
+  // Upload to Storage (or fall back to dataURL if not signed in)
+  toast('Uploading cover photo…','info');
+  const imageId='cover_'+uid();
+  const url=await uploadFileToStorage(file,imageId);
+  document.getElementById('m-nb-coverimg').value=url;
+  toast('Cover photo ready ✦','ok');
 }
 
 function clearCoverImg(){
@@ -3119,7 +3158,7 @@ const FIREBASE_CONFIG={
   measurementId:     "G-2GQPNPQTNF"
 };
 
-let fbApp=null,fbAuth=null,fbDb=null,fbUser=null,fbUnsubscribe=null;
+let fbApp=null,fbAuth=null,fbDb=null,fbStorage=null,fbUser=null,fbUnsubscribe=null;
 let fbConfigured=FIREBASE_CONFIG.apiKey!=="YOUR_API_KEY";
 
 function fbInit(){
@@ -3130,11 +3169,12 @@ function fbInit(){
     return;
   }
   try{
-    const {initializeApp,getAnalytics,getAuth,getFirestore,onAuthStateChanged}=window._fbModules;
+    const {initializeApp,getAnalytics,getAuth,getFirestore,onAuthStateChanged,getStorage}=window._fbModules;
     fbApp=initializeApp(FIREBASE_CONFIG);
     try{getAnalytics(fbApp);}catch(e){}
     fbAuth=getAuth(fbApp);
     fbDb=getFirestore(fbApp);
+    fbStorage=getStorage(fbApp);
     onAuthStateChanged(fbAuth,user=>{
       fbUser=user;
       updateSyncUI();
@@ -3167,6 +3207,12 @@ function updateSyncUI(){
     if(fbDot)fbDot.style.background='var(--sage)';
     const displayName=fbUser.displayName||fbUser.email.split('@')[0];
     if(statusTxt)statusTxt.textContent='Connected · '+displayName;
+    // Update storage status
+    const storageTxt=document.getElementById('storage-status-txt');
+    if(storageTxt){
+      storageTxt.textContent=fbStorage?'Active':'Not ready';
+      storageTxt.style.color=fbStorage?'var(--sage)':'var(--rose)';
+    }
     if(emailDisplay)emailDisplay.textContent=fbUser.email;
     if(loggedIn)loggedIn.style.display='block';
     if(loggedOut)loggedOut.style.display='none';
@@ -3362,8 +3408,14 @@ function fbStartListener(){
     window._applyingRemoteData=false;
 
     // Only show toast for genuine cross-device syncs, not initial load
+    // Show subtle dot pulse instead of a toast to avoid distraction
     if(!firstSnapshot){
-      toast('Notebooks synced from cloud ☁️','ok');
+      const dot=document.getElementById('sb-sync-dot');
+      if(dot){
+        dot.style.background='#7a9e7e';
+        // Brief pulse to indicate sync without a banner
+        setTimeout(()=>{if(dot)dot.style.background='var(--sage)';},1000);
+      }
     }
     firstSnapshot=false;
 
@@ -3825,32 +3877,29 @@ function removePackImg(idx){
 }
 
 /* ── Handle file input — supports multiple files ── */
-function handleArtUpload(e){
+async function handleArtUpload(e){
   const files=Array.from(e.target.files||[]);
   e.target.value='';
   if(!files.length)return;
 
-  const remaining=MAX_PACK-pendingArtPack.length;
-  const toLoad=files.slice(0,remaining);
+  const toLoad=files.filter(f=>f.size<=10*1024*1024);
+  const skipped=files.length-toLoad.length;
+  if(skipped>0)toast(`${skipped} file${skipped!==1?'s':''} over 10MB skipped`,'info');
+  if(!toLoad.length)return;
 
-  if(files.length>remaining){
-    toast(`Pack is full at ${MAX_PACK} — first ${remaining} image${remaining!==1?'s':''} added`,'info');
-  }
-
+  toast(`Uploading ${toLoad.length} image${toLoad.length!==1?'s':''}…`,'info');
   let loaded=0;
-  toLoad.forEach(file=>{
-    if(file.size>8*1024*1024){toast(`${file.name} is over 8MB — skipped`,'info');return;}
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      pendingArtPack.push({dataURL:ev.target.result,name:file.name});
-      loaded++;
-      if(loaded===toLoad.length){
-        renderPackGrid();
-        toast(`${loaded} image${loaded!==1?'s':''} added ✦`,'ok');
-      }
-    };
-    reader.readAsDataURL(file);
-  });
+  for(const file of toLoad){
+    const imageId=uid();
+    // Upload to Storage (falls back to dataURL if not signed in)
+    const url=await uploadFileToStorage(file,imageId);
+    pendingArtPack.push({dataURL:url, name:file.name, imageId});
+    loaded++;
+    if(loaded===toLoad.length){
+      renderPackGrid();
+      toast(`${loaded} image${loaded!==1?'s':''} added ✦`,'ok');
+    }
+  }
 }
 
 function selectArtTpl(btn,tpl){
@@ -4483,35 +4532,35 @@ function renderLibBrowse(){
 }
 
 /* ── Upload images to library ── */
-function handleLibUpload(e){
-  const files=Array.from(e.target.files||[]);
+async function handleLibUpload(e){
+  const files=Array.from(e.target.files||[]).filter(f=>f.type.startsWith('image/'));
   e.target.value='';
   if(!files.length)return;
 
-  const targetColId=document.getElementById('lib-upload-target')?.value||'';
-  let loaded=0;
+  const valid=files.filter(f=>f.size<=10*1024*1024);
+  const skipped=files.length-valid.length;
+  if(skipped>0)toast(`${skipped} file${skipped!==1?'s':''} over 10MB skipped`,'info');
+  if(!valid.length)return;
 
-  files.forEach(file=>{
-    if(!file.type.startsWith('image/')){return;}
-    if(file.size>10*1024*1024){toast(`${file.name} over 10MB — skipped`,'info');return;}
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      S.artLibrary.images.push({
-        id:uid(),
-        name:file.name.replace(/\.[^/.]+$/,''), // strip extension
-        dataURL:ev.target.result,
-        colId:targetColId||null,
-        added:new Date().toISOString()
-      });
-      loaded++;
-      if(loaded===files.length){
-        saveArtLibrary();
-        renderLibBrowse();
-        toast(`${loaded} image${loaded!==1?'s':''} added to library ✦`,'ok');
-      }
-    };
-    reader.readAsDataURL(file);
-  });
+  const targetColId=document.getElementById('lib-upload-target')?.value||'';
+  toast(`Uploading ${valid.length} image${valid.length!==1?'s':''}…`,'info');
+
+  let loaded=0;
+  for(const file of valid){
+    const imageId=uid();
+    const url=await uploadFileToStorage(file,imageId);
+    S.artLibrary.images.push({
+      id:imageId,
+      name:file.name.replace(/\.[^/.]+$/,''),
+      dataURL:url,       // now a Storage URL or dataURL fallback
+      colId:targetColId||null,
+      added:new Date().toISOString()
+    });
+    loaded++;
+    uploadProgress(loaded,valid.length,'Images');
+  }
+  saveArtLibrary();
+  renderLibBrowse();
 }
 
 /* ── Collections ── */
@@ -4558,10 +4607,14 @@ function deleteLibImage(id,e){
   if(!img)return;
   if(!confirm(`Remove "${img.name}" from library?`))return;
   S.artLibrary.images=S.artLibrary.images.filter(i=>i.id!==id);
-  // Also remove from any notebook artPacks that use this image
+  // Remove from any notebook artPacks
   S.notebooks.forEach(nb=>{
     if(nb.artPack)nb.artPack=nb.artPack.filter(url=>url!==img.dataURL);
   });
+  // Delete from Firebase Storage
+  if(img.dataURL&&!img.dataURL.startsWith('data:')){
+    deleteImageFromStorage(img.dataURL);
+  }
   saveArtLibrary();
   save();
   renderLibBrowse();
@@ -5247,6 +5300,100 @@ function handleMainClick(e){
   if(!sb)return;
   if(sb.classList.contains('open')){
     closeSidebar();
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   FIREBASE STORAGE SYSTEM
+   ─────────────────────────────────────────────────────────
+   Images are stored in Firebase Storage at:
+     users/{uid}/images/{imageId}.jpg
+
+   Local base64 dataURLs → uploaded → replaced with
+   Firebase Storage download URLs (https://...)
+
+   This way:
+   - Images sync across all devices
+   - No localStorage size limits
+   - Notebooks store download URLs not base64 blobs
+   - Firestore sync remains fast (no image data in docs)
+══════════════════════════════════════════════════════════ */
+
+/* ── Upload a base64 dataURL to Firebase Storage ──
+   Returns the public download URL, or null if not signed in */
+async function uploadImageToStorage(dataURL, imageId){
+  if(!fbStorage||!fbUser){
+    // Not signed in — keep as dataURL (local only)
+    return dataURL;
+  }
+  try{
+    const {ref,uploadString,getDownloadURL}=window._fbModules;
+    const path=`users/${fbUser.uid}/images/${imageId}`;
+    const storageRef=ref(fbStorage,path);
+    // Upload base64 data URL
+    const snap=await uploadString(storageRef,dataURL,'data_url');
+    const url=await getDownloadURL(snap.ref);
+    return url;
+  }catch(e){
+    console.warn('Storage upload failed:',e.message);
+    // Fall back to dataURL if upload fails
+    return dataURL;
+  }
+}
+
+/* ── Upload a File object directly ── */
+async function uploadFileToStorage(file, imageId){
+  if(!fbStorage||!fbUser){
+    // Not signed in — convert to dataURL and store locally
+    return new Promise(resolve=>{
+      const reader=new FileReader();
+      reader.onload=ev=>resolve(ev.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+  try{
+    const {ref,uploadBytes,getDownloadURL}=window._fbModules;
+    const ext=file.name.split('.').pop().toLowerCase()||'jpg';
+    const path=`users/${fbUser.uid}/images/${imageId}.${ext}`;
+    const storageRef=ref(fbStorage,path);
+    const snap=await uploadBytes(storageRef,file);
+    const url=await getDownloadURL(snap.ref);
+    return url;
+  }catch(e){
+    console.warn('Storage upload failed:',e.message);
+    // Fall back to local dataURL
+    return new Promise(resolve=>{
+      const reader=new FileReader();
+      reader.onload=ev=>resolve(ev.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+}
+
+/* ── Delete an image from Storage ── */
+async function deleteImageFromStorage(url){
+  if(!fbStorage||!fbUser||!url||url.startsWith('data:'))return;
+  try{
+    const {ref,deleteObject}=window._fbModules;
+    // Extract path from URL
+    const pathMatch=url.match(/\/o\/(.+?)\?/);
+    if(!pathMatch)return;
+    const path=decodeURIComponent(pathMatch[1]);
+    const storageRef=ref(fbStorage,path);
+    await deleteObject(storageRef);
+  }catch(e){
+    console.warn('Storage delete failed:',e.message);
+  }
+}
+
+/* ── Show upload progress toast ── */
+function uploadProgress(current,total,label){
+  const lbl=document.getElementById('sync-lbl');
+  if(lbl)lbl.textContent=`Uploading ${current}/${total}…`;
+  if(current===total){
+    setTimeout(()=>{if(lbl)lbl.textContent='Synced';},1000);
+    toast(`${label} uploaded ✦`,'ok');
   }
 }
 
