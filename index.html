@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<!-- AureliaInk v31 — patched 4/3/2026 -->
 <title>AureliaInk ✦ Your Magical Notebook</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -484,6 +485,8 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   flex-shrink:0;display:inline-flex;flex-direction:column;align-items:center;gap:1px;min-width:42px}
 .tbb:hover,.tbb:active{background:rgba(201,168,76,.12);color:var(--gold);border-color:rgba(201,168,76,.4)}
 .tbb.on{background:rgba(201,168,76,.16);color:var(--gold);border-color:var(--gold)}
+#view-artwork-btn.on{background:rgba(44,160,140,.18);color:#3fcfbc;border-color:#3fcfbc;box-shadow:0 0 8px rgba(44,160,140,.35);}
+#view-clean-btn.on{background:rgba(44,160,140,.18);color:#3fcfbc;border-color:#3fcfbc;box-shadow:0 0 8px rgba(44,160,140,.35);}
 .tbb-ico{font-size:15px;line-height:1.2}
 .tbb-lbl{font-size:8px;letter-spacing:.3px;color:rgba(201,168,76,.55);font-weight:500;
   text-transform:uppercase;font-family:var(--font-u)}
@@ -669,9 +672,10 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   transition:all .15s;background:transparent;-webkit-tap-highlight-color:transparent}
 .todo-check.done{background:var(--sage);border-color:var(--sage)}
 .todo-check.done::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
-.todo-txt{flex:1;font-family:var(--font-h);font-size:17px;color:var(--ink);
+.todo-txt{flex:1;font-family:var(--font-h);font-size:17px;color:#2a1e0c;
   border:none;outline:none;background:transparent;width:100%;line-height:1.4;
   -webkit-user-select:auto;user-select:auto}
+.todo-txt,.todo-txt:focus{color:#2a1e0c !important;}
 .todo-txt.done{text-decoration:line-through;color:rgba(60,40,10,.35)}
 
 /* ══ MODALS ══ */
@@ -1299,7 +1303,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <div class="nb-bar" id="nb-bar">
         <button class="nb-back" onclick="closeNB()">← Back</button>
         <div class="nb-nb-title" id="nb-ttl">—</div>
-        <button class="tbb" id="view-btn" onclick="toggleClean()" title="Toggle artwork"><span class="tbb-ico">🖼</span><span class="tbb-lbl">Art</span></button>
+        <button class="tbb" id="view-artwork-btn" onclick="setArtworkView()" title="Artwork view"><span class="tbb-ico">🖼</span><span class="tbb-lbl">Artwork</span></button><button class="tbb" id="view-clean-btn" onclick="setCleanView()" title="Clean/focus view"><span class="tbb-ico">📄</span><span class="tbb-lbl">Clean</span></button>
         <button class="tbb" id="art-btn" onclick="openArtPicker()" title="Set page artwork"><span class="tbb-ico">🎨</span><span class="tbb-lbl">Artwork</span></button>
         <button class="tbb" id="draw-mode-tbb" onclick="setInkMode('draw')" title="Draw with stylus"><span class="tbb-ico">🖊</span><span class="tbb-lbl">Draw</span></button>
         <button class="tbb" onclick="addPage()" title="Add new page"><span class="tbb-ico">＋</span><span class="tbb-lbl">Page</span></button>
@@ -1543,7 +1547,6 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <button class="tpl-chip"        data-tpl="grid"    onclick="selectArtTpl(this,'grid')">Grid</button>
       <button class="tpl-chip"        data-tpl="blank"   onclick="selectArtTpl(this,'blank')">No lines</button>
       <button class="tpl-chip"        data-tpl="cornell" onclick="selectArtTpl(this,'cornell')">Cornell</button>
-      <button class="tpl-chip"        data-tpl="todo"    onclick="selectArtTpl(this,'todo')">✅ To-Do</button>
     </div>
 
     <div class="modal-foot">
@@ -2238,14 +2241,20 @@ function openStn(){
 function applyStn(){if(S.pendingStn){applyCol(S.pendingStn);S.pendingStn=null;}closeM('m-stn');}
 
 /* ═══════ CLEAN VIEW ═══════ */
-function toggleClean(){
-  S.clean=!S.clean;
-  const btn=document.getElementById('view-btn');
-  const pg=document.getElementById('the-page');
-  btn.textContent=S.clean?'✏️ Clean':'🖼 Art';
-  btn.classList.toggle('on',S.clean);
-  pg.classList.toggle('clean',S.clean);
-  toast(S.clean?'Clean view — focus on writing ✦':'Full artwork view ✦','info');
+function toggleClean(){if(S.clean)setArtworkView();else setCleanView();}
+function setArtworkView(){
+  S.clean=false;
+  document.getElementById('the-page')?.classList.remove('clean');
+  document.getElementById('view-artwork-btn')?.classList.add('on');
+  document.getElementById('view-clean-btn')?.classList.remove('on');
+  toast('Artwork View ✦','info');
+}
+function setCleanView(){
+  S.clean=true;
+  document.getElementById('the-page')?.classList.add('clean');
+  document.getElementById('view-clean-btn')?.classList.add('on');
+  document.getElementById('view-artwork-btn')?.classList.remove('on');
+  toast('Clean View — artwork dimmed ✦','info');
 }
 
 /* ═══════ RENDER SINGLE PAGE ═══════ */
@@ -2309,7 +2318,7 @@ async function renderPage(){
     if(!pgBody){
       pgBody=document.createElement('div');
       pgBody.id='pg-body-todo';
-      pgBody.style.cssText='position:absolute;inset:0;padding:42px 18px 14px;z-index:4;overflow-y:auto';
+      pgBody.style.cssText='position:absolute;inset:0;padding:42px 18px 14px;z-index:4;overflow-y:auto;background:transparent';
       document.getElementById('the-page').appendChild(pgBody);
     }
     pgBody.style.display='block';
@@ -2388,7 +2397,7 @@ function renderTodo(el,text,idx){
       <input class="todo-txt ${done?'done':''}" value="${esc(txt)}"
         onchange="tdUpd(${idx},${li},this.value)"
         placeholder="Task…"
-        style="font-family:var(--font-h);font-size:17px;color:var(--ink);border:none;
+        style="font-family:var(--font-h);font-size:17px;color:#2a1e0c;border:none;
         outline:none;background:transparent;flex:1;width:100%;line-height:1.4;
         -webkit-user-select:auto;user-select:auto">
       <span class="todo-due ${dueClass}" onclick="tdSetDue(${idx},${li},'${due}')">${esc(dueLbl)}</span>
@@ -2502,6 +2511,7 @@ function renderFolders(){
 
 function flt(el,e){
   if(e)e.stopPropagation();
+  if(S.nb){closeNB();}
   document.querySelectorAll('.fi').forEach(f=>{
     f.classList.remove('active');
     const a=f.querySelector('.fi-folder-actions');
@@ -2599,8 +2609,8 @@ function rebuildFolderSelect(){
 /* ═══════ OPEN / CLOSE ═══════ */
 function openNB(nb){
   S.nb=nb;S.pg=0;S.tpl=nb.tpl||'lined';S.clean=false;
-  document.getElementById('view-btn').textContent='🖼 Art';
-  document.getElementById('view-btn').classList.remove('on');
+  document.getElementById('view-artwork-btn')?.classList.remove('on');
+  document.getElementById('view-clean-btn')?.classList.remove('on');
   document.getElementById('shelf').style.display='none';
   document.getElementById('nb-view').classList.add('active');
   document.getElementById('nb-ttl').textContent=(nb.emoji?nb.emoji+' ':'')+nb.title;
@@ -2615,10 +2625,12 @@ function openNB(nb){
     if(tplBar)tplBar.style.display='none';
   }else{
     if(tplBar)tplBar.style.display='';
-    // template chips
+    // template chips — hide To-Do chip for non-todo notebooks
     document.querySelectorAll('.tpl-chip').forEach(c=>{
       const m=(c.dataset.t===S.tpl)||(c.dataset.colId===nb.colId&&S.tpl==='pdf');
       c.classList.toggle('active',m);
+      if(c.dataset.t==='todo'){c.style.display='none';}
+      else{c.style.display='';}
     });
   }
 
@@ -2782,6 +2794,14 @@ function createNB(){
 function selC(el){document.querySelectorAll('.cov-opt').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
 function renameNB(nb){const n=prompt('Rename:',nb.title);if(n?.trim()){nb.title=n.trim();save();renderShelf(S.folder==='all'?null:S.folder);toast('Renamed ✦','ok');}}
 
+/* ═══════ DATE PICKER FOR TODOS ═══════ */
+let _dpTodoTarget={pageIdx:0,lineIdx:0};
+function openDatePicker(pageIdx,lineIdx,currentDue){
+  _dpTodoTarget={pageIdx,lineIdx};
+  _dpCallback=null;
+  buildDpCal(currentDue?new Date(currentDue+'T12:00:00'):new Date());
+  openM('m-datepick');
+}
 /* ═══════ QUICK NOTES ═══════ */
 function toggleQN(){document.getElementById('qn-panel').classList.toggle('open');setTimeout(()=>document.getElementById('qn-ta').focus(),300);}
 function saveQN(){const t=document.getElementById('qn-ta').value.trim();if(!t)return;S.quickNotes.unshift({id:uid(),text:t,created:new Date().toISOString()});save();document.getElementById('qn-ta').value='';renderQNList();toast('Quick note saved ⚡','ok');}
