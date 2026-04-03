@@ -672,10 +672,12 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   transition:all .15s;background:transparent;-webkit-tap-highlight-color:transparent}
 .todo-check.done{background:var(--sage);border-color:var(--sage)}
 .todo-check.done::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
-.todo-txt{flex:1;font-family:var(--font-h);font-size:17px;color:#2a1e0c;
+.todo-txt{flex:1;font-family:var(--font-h);font-size:17px;color:#2a1e0c !important;
+  -webkit-text-fill-color:#2a1e0c !important;
   border:none;outline:none;background:transparent;width:100%;line-height:1.4;
   -webkit-user-select:auto;user-select:auto}
-.todo-txt.done{text-decoration:line-through;color:rgba(60,40,10,.35)}
+.todo-txt.done{text-decoration:line-through;color:rgba(60,40,10,.35) !important;
+  -webkit-text-fill-color:rgba(60,40,10,.35) !important;}
 
 /* ══ MODALS ══ */
 .modal-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.8);
@@ -2288,9 +2290,15 @@ async function renderPage(){
   if(artForPage){
     if(artBg){ artBg.src=artForPage; artBg.style.display='block'; }
     pgEl.classList.add('has-art');
+    // Make CSS pattern layer transparent so artwork shows through
+    const pgCss=document.getElementById('pg-css');
+    if(pgCss)pgCss.style.background='transparent';
   }else{
     if(artBg){ artBg.src=''; artBg.style.display='none'; }
     pgEl.classList.remove('has-art');
+    // Restore solid background when no artwork
+    const pgCss=document.getElementById('pg-css');
+    if(pgCss)pgCss.style.background='';
   }
 
   // CSS line pattern — always drawn on top of artwork
@@ -2397,7 +2405,7 @@ function renderTodo(el,text,idx){
       <input class="todo-txt ${done?'done':''}" value="${esc(txt)}"
         onchange="tdUpd(${idx},${li},this.value)"
         placeholder="Task…"
-        style="font-family:var(--font-h);font-size:17px;color:#2a1e0c;border:none;
+        style="font-family:var(--font-h);font-size:17px;color:#2a1e0c !important;-webkit-text-fill-color:#2a1e0c;border:none;
         outline:none;background:transparent;flex:1;width:100%;line-height:1.4;
         -webkit-user-select:auto;user-select:auto">
       <span class="todo-due ${dueClass}" onclick="tdSetDue(${idx},${li},'${due}')">${esc(dueLbl)}</span>
