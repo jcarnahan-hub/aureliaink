@@ -2629,8 +2629,8 @@ function openNB(nb){
     document.querySelectorAll('.tpl-chip').forEach(c=>{
       const m=(c.dataset.t===S.tpl)||(c.dataset.colId===nb.colId&&S.tpl==='pdf');
       c.classList.toggle('active',m);
-      if(c.dataset.t==='todo'){c.style.display='none';}
-      else{c.style.display='';}
+      // To-Do allowed everywhere in artwork library
+      c.style.display='';
     });
   }
 
