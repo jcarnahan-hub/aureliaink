@@ -560,39 +560,39 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 .pg-css{position:absolute;inset:0;z-index:1;border-radius:inherit;
   pointer-events:none;}
 
-/* When artwork is active — transparent bg so art shows, stronger lines */
+/* When artwork is active — transparent bg so art shows, strong lines */
 .has-art .pg-css,
 .has-art #pg-css{background:transparent !important;}
 .has-art .pat-lined{
-  background:transparent !important;
-  background-image:repeating-linear-gradient(transparent,transparent 31px,rgba(60,40,10,.35) 31px,rgba(60,40,10,.35) 32px) !important;
+  background:rgba(255,254,248,0.78) !important;
+  background-image:repeating-linear-gradient(transparent,transparent 31px,rgba(60,40,10,.55) 31px,rgba(60,40,10,.55) 32px) !important;
   background-position:0 40px !important;}
 .has-art .pat-dotted{
-  background:transparent !important;
-  background-image:radial-gradient(circle,rgba(60,40,10,.45) 1px,transparent 1px) !important;
+  background:rgba(255,254,248,0.78) !important;
+  background-image:radial-gradient(circle,rgba(60,40,10,.65) 1px,transparent 1px) !important;
   background-size:22px 22px !important;background-position:11px 11px !important;}
 .has-art .pat-grid{
-  background:transparent !important;
-  background-image:linear-gradient(rgba(60,40,10,.35) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(60,40,10,.35) 1px,transparent 1px) !important;
+  background:rgba(255,254,248,0.78) !important;
+  background-image:linear-gradient(rgba(60,40,10,.55) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(60,40,10,.55) 1px,transparent 1px) !important;
   background-size:22px 22px !important;}
-.has-art .pat-blank{background:transparent !important;}
+.has-art .pat-blank{background:rgba(255,254,248,0.78) !important;}
 .has-art .pat-cornell{
-  background:transparent !important;
+  background:rgba(255,254,248,0.78) !important;
   background-image:
-    linear-gradient(rgba(200,60,60,.45) 1px,transparent 1px),
-    repeating-linear-gradient(transparent,transparent 31px,rgba(60,40,10,.35) 31px,rgba(60,40,10,.35) 32px),
-    linear-gradient(90deg,rgba(200,60,60,.45) 1px,transparent 1px) !important;
+    linear-gradient(rgba(200,60,60,.6) 1px,transparent 1px),
+    repeating-linear-gradient(transparent,transparent 31px,rgba(60,40,10,.55) 31px,rgba(60,40,10,.55) 32px),
+    linear-gradient(90deg,rgba(200,60,60,.6) 1px,transparent 1px) !important;
   background-size:100% 72px,100% 32px,175px 100% !important;
   background-position:0 68px,0 36px,171px 0 !important;}
 
-/* Textarea gets semi-transparent background over artwork for readability */
+/* Textarea background over artwork */
 .has-art #plain-textarea{
-  background:rgba(255,254,248,0.55) !important;
+  background:rgba(255,254,248,0.78) !important;
 }
-/* Todo body over artwork */
+/* Todo body over artwork — must match */
 .has-art #pg-body-todo{
-  background:rgba(255,254,248,0.55) !important;
+  background:rgba(255,254,248,0.78) !important;
 }
 
 /* Clean-view overlay — dims the artwork for easier reading */
@@ -707,12 +707,12 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   transition:all .15s;background:transparent;-webkit-tap-highlight-color:transparent}
 .todo-check.done{background:var(--sage);border-color:var(--sage)}
 .todo-check.done::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
-.todo-txt{flex:1;font-family:var(--font-h);font-size:17px;color:#2a1e0c !important;
-  -webkit-text-fill-color:#2a1e0c !important;
+.todo-txt{flex:1;font-family:var(--font-h);font-size:17px;color:#1a0c02 !important;
+  -webkit-text-fill-color:#1a0c02 !important;
   border:none;outline:none;background:transparent;width:100%;line-height:1.4;
-  -webkit-user-select:auto;user-select:auto}
-.todo-txt.done{text-decoration:line-through;color:rgba(60,40,10,.35) !important;
-  -webkit-text-fill-color:rgba(60,40,10,.35) !important;}
+  -webkit-user-select:auto;user-select:auto;opacity:1 !important;}
+.todo-txt.done{text-decoration:line-through;color:rgba(60,40,10,.5) !important;
+  -webkit-text-fill-color:rgba(60,40,10,.5) !important;}
 
 /* ══ MODALS ══ */
 .modal-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.8);
@@ -2434,7 +2434,7 @@ function renderTodo(el,text,idx){
       <input class="todo-txt ${done?'done':''}" value="${esc(txt)}"
         onchange="tdUpd(${idx},${li},this.value)"
         placeholder="Task…"
-        style="font-family:var(--font-h);font-size:17px;color:#2a1e0c !important;-webkit-text-fill-color:#2a1e0c;border:none;
+        style="font-family:var(--font-h);font-size:17px;color:#1a0c02 !important;-webkit-text-fill-color:#1a0c02 !important;opacity:1 !important;border:none;
         outline:none;background:transparent;flex:1;width:100%;line-height:1.4;
         -webkit-user-select:auto;user-select:auto">
       <span class="todo-due ${dueClass}" onclick="tdSetDue(${idx},${li},'${due}')">${esc(dueLbl)}</span>
