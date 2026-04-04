@@ -1669,6 +1669,16 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <div class="u-ico" style="font-size:18px">＋</div>
       <p id="art-drop-lbl">Tap to add images (PNG, JPG, WebP)</p>
     </div>
+    <!-- Upload progress indicator -->
+    <div id="art-upload-progress" style="display:none;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:13px;color:var(--gold)" id="art-progress-lbl">Uploading…</span>
+        <span style="font-size:12px;color:rgba(253,246,232,.5)" id="art-progress-count"></span>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:8px;height:8px;overflow:hidden">
+        <div id="art-progress-bar" style="height:100%;background:linear-gradient(90deg,var(--gold),#e8c96a);border-radius:8px;width:0%;transition:width .3s ease"></div>
+      </div>
+    </div>
     <input type="file" id="art-file" multiple
       accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp"
       style="position:fixed;top:-999px;left:-999px;opacity:0;width:1px;height:1px"
@@ -4215,19 +4225,39 @@ async function handleArtUpload(e){
   if(skipped>0)toast(`${skipped} file${skipped!==1?'s':''} over 10MB skipped`,'info');
   if(!toLoad.length)return;
 
-  toast(`Uploading ${toLoad.length} image${toLoad.length!==1?'s':''}…`,'info');
+  // Show progress bar
+  const progressWrap=document.getElementById('art-upload-progress');
+  const progressBar=document.getElementById('art-progress-bar');
+  const progressLbl=document.getElementById('art-progress-lbl');
+  const progressCount=document.getElementById('art-progress-count');
+  const artDrop=document.getElementById('art-drop');
+  if(progressWrap){progressWrap.style.display='block';}
+  if(artDrop)artDrop.style.opacity='0.4';
+
   let loaded=0;
   for(const file of toLoad){
+    // Update progress label
+    if(progressLbl)progressLbl.textContent=`Uploading "${file.name}"…`;
+    if(progressCount)progressCount.textContent=`${loaded+1} of ${toLoad.length}`;
+    if(progressBar)progressBar.style.width=`${Math.round((loaded/toLoad.length)*100)}%`;
+
     const imageId=uid();
-    // Upload to Storage (falls back to dataURL if not signed in)
     const url=await uploadFileToStorage(file,imageId);
     pendingArtPack.push({dataURL:url, name:file.name, imageId});
     loaded++;
-    if(loaded===toLoad.length){
-      renderPackGrid();
-      toast(`${loaded} image${loaded!==1?'s':''} added ✦`,'ok');
-    }
+
+    // Update progress after each upload
+    if(progressBar)progressBar.style.width=`${Math.round((loaded/toLoad.length)*100)}%`;
+    if(progressCount)progressCount.textContent=`${loaded} of ${toLoad.length}`;
   }
+
+  // Hide progress bar and restore drop zone
+  if(progressWrap)progressWrap.style.display='none';
+  if(progressBar)progressBar.style.width='0%';
+  if(artDrop)artDrop.style.opacity='';
+
+  renderPackGrid();
+  toast(`${loaded} image${loaded!==1?'s':''} added ✦`,'ok');
 }
 
 function selectArtTpl(btn,tpl){
