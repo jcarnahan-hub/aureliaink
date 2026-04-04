@@ -2145,17 +2145,42 @@ function init(){
   document.getElementById('si')?.addEventListener('blur',()=>setTimeout(()=>document.getElementById('sr').classList.remove('vis'),200));
   document.getElementById('qn-ta')?.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter')saveQN()});
 
-  // Swipe gestures on the page
+  // Swipe gestures — attach to page AND all child layers so nothing blocks it
+  const swipeStart=e=>{S.swipeX=e.touches[0].clientX;S.swipeY=e.touches[0].clientY;};
+  const swipeEnd=e=>{
+    if(S.swipeX===null)return;
+    const dx=e.changedTouches[0].clientX-S.swipeX;
+    const dy=e.changedTouches[0].clientY-S.swipeY;
+    S.swipeX=null;S.swipeY=null;
+    // Only flip if horizontal swipe is dominant and significant
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){
+      // Don't flip if in draw mode
+      if(INK&&INK.mode==='draw')return;
+      flipWithAnim(dx<0?1:-1);
+    }
+  };
   const page=document.getElementById('the-page');
   if(page){
-    page.addEventListener('touchstart',e=>{S.swipeX=e.touches[0].clientX},{passive:true});
-    page.addEventListener('touchend',e=>{
-      if(S.swipeX===null)return;
-      const dx=e.changedTouches[0].clientX-S.swipeX;
-      S.swipeX=null;
-      if(Math.abs(dx)>50){flipWithAnim(dx<0?1:-1);}
-    },{passive:true});
+    page.addEventListener('touchstart',swipeStart,{passive:true});
+    page.addEventListener('touchend',swipeEnd,{passive:true});
   }
+  // Also attach to layers that sit on top of the-page
+  ['plain-textarea','pg-body-todo','ink-canvas','pg-css','pg-line-overlay'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      el.addEventListener('touchstart',swipeStart,{passive:true});
+      el.addEventListener('touchend',swipeEnd,{passive:true});
+    }
+  });
+  // Attach dynamically for pg-body-todo which is created later
+  document.addEventListener('touchstart',e=>{
+    if(!S.nb)return;
+    if(e.target.closest('#the-page'))swipeStart(e);
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!S.nb)return;
+    if(e.target.closest('#the-page'))swipeEnd(e);
+  },{passive:true});
 
   // Drag/drop upload
   const drop=document.getElementById('up-drop');
