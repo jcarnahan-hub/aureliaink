@@ -1345,7 +1345,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   <main class="main" onclick="handleMainClick(event)">
     <!-- Top bar -->
     <div class="topbar">
-      <button class="tb-menu-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+      <button class="tb-menu-btn" onclick="toggleSidebar();event.stopPropagation();" aria-label="Menu">☰</button>
       <div class="tb-title" id="tb-title">AureliaInk</div>
       <div class="sync-badge" onclick="openSyncModal()" style="cursor:pointer;padding:4px 8px;border-radius:20px;border:1px solid rgba(201,168,76,.15)" title="Tap to open sync settings">
         <div class="sync-dot"></div>
@@ -5383,6 +5383,8 @@ function onNBTplChange(sel){
 function handleMainClick(e){
   const sb=document.getElementById('sidebar');
   if(!sb)return;
+  // Don't close if click was on the topbar or menu button
+  if(e.target.closest('.topbar'))return;
   if(sb.classList.contains('open')){
     closeSidebar();
   }
