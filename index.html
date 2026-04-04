@@ -735,7 +735,8 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 
 /* TODO */
 .todo-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;
-  padding:4px 6px;border-radius:6px;transition:background .15s}
+  padding:4px 6px;border-radius:6px;transition:background .15s;
+  background:rgba(255,254,248,0.75);}
 .todo-check{width:20px;height:20px;border:2px solid rgba(60,40,10,.28);border-radius:5px;
   cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;
   transition:all .15s;background:transparent;-webkit-tap-highlight-color:transparent}
@@ -1121,9 +1122,9 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   font-size:12px;font-weight:600;
   padding:4px 10px;border-radius:10px;
   font-family:var(--font-u);cursor:pointer;white-space:nowrap;flex-shrink:0;
-  border:2px solid rgba(201,168,76,.4);
-  color:rgba(201,168,76,.85);
-  background:rgba(201,168,76,.12);
+  border:2px solid rgba(201,168,76,.8);
+  color:#8a5e0a;
+  background:rgba(201,168,76,0.85);
   transition:all .15s;
   min-width:72px;text-align:center;
 }
@@ -1529,7 +1530,13 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <div class="cov-opt cov-8"     data-c="8" onclick="selC(this)"></div>
     </div>
     <div class="modal-lbl">Emoji (optional)</div>
-    <input class="modal-inp" id="m-nb-emoji" type="text" placeholder="🌿 🌙 ✨ 🦋 📖 🐢 …" maxlength="4" inputmode="text">
+    <div style="display:flex;gap:8px;align-items:center">
+      <input class="modal-inp" id="m-nb-emoji" type="text" placeholder="Paste emoji…" maxlength="4" inputmode="text" style="flex:1">
+      <button onclick="document.getElementById('m-nb-emoji').value=''" style="padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.25);border-radius:8px;color:rgba(201,168,76,.8);cursor:pointer;font-size:13px;white-space:nowrap">✕ Clear</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+      ${['📁','💼','🌸','✅','💡','🌙','⭐','🎯','📝','🔖','🎨','🌿','🏠','✈️','💰','🎵','🦋','🌊','🔥','💎'].map(e=>`<button onclick="document.getElementById('m-nb-emoji').value='${e}'" style="font-size:20px;background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.15);border-radius:8px;padding:4px 8px;cursor:pointer">${e}</button>`).join('')}
+    </div>
     <div class="modal-lbl">Default Template</div>
     <select class="modal-inp" id="m-nb-tpl" onchange="onNBTplChange(this)">
       <option value="lined">Lined</option>
@@ -2425,7 +2432,10 @@ async function renderPage(){
   pgEl.classList.toggle('clean',S.clean);
   // Todo pages: disable ink canvas pointer events so taps reach checkboxes
   const inkCv=document.getElementById('ink-canvas');
-  if(inkCv)inkCv.style.pointerEvents=(tpl==='todo')?'none':'auto';
+  if(inkCv){
+    inkCv.style.pointerEvents=(tpl==='todo')?'none':'auto';
+    inkCv.style.zIndex=(tpl==='todo')?'-1':'2';
+  }
 
   // Hide old calibrate button — no longer needed
   const calBtn=document.getElementById('cal-btn-tog');
@@ -2530,8 +2540,10 @@ function renderTodo(el,text,idx){
   });
   h+=`<div class="todo-item">
     <div class="todo-check" style="border-style:dashed;opacity:.35"></div>
-    <input style="font-family:var(--font-h);font-size:17px;color:rgba(60,40,10,.35);
-      border:none;outline:none;background:transparent;flex:1;line-height:1.4;
+    <input style="font-family:var(--font-h);font-size:17px;color:#1a0c02 !important;
+      -webkit-text-fill-color:#1a0c02 !important;opacity:1 !important;
+      border:none;outline:none;background:rgba(255,254,248,0.7);flex:1;line-height:1.4;
+      border-radius:6px;padding:2px 6px;
       -webkit-user-select:auto;user-select:auto"
       placeholder="Add task (Enter)…" onkeydown="tdAdd(event,${idx})">
   </div></div>`;
@@ -2745,9 +2757,11 @@ function openNB(nb){
   const isTodoNB = nb.tpl==='todo';
   // Hide/show template bar chips based on notebook type
   const tplBar=document.getElementById('tpl-bar');
+  const inkToggle=document.getElementById('ink-mode-toggle');
   if(isTodoNB){
-    // Lock to todo — hide template switcher entirely
+    // Lock to todo — hide template switcher AND ink toggle entirely
     if(tplBar)tplBar.style.display='none';
+    if(inkToggle)inkToggle.classList.remove('show');
   }else{
     if(tplBar)tplBar.style.display='';
     // template chips — scope to tpl-bar only, never touch modal chips
@@ -2773,8 +2787,11 @@ function openNB(nb){
     if(nb.preferDraw && !isTodoNB){
       setInkMode('draw');
     }else{
-      if(INK.mode==='draw')setInkMode('type');
+      setInkMode('type');
     }
+    // Hide draw button entirely for todo notebooks
+    const drawBtn=document.getElementById('draw-mode-tbb');
+    if(drawBtn)drawBtn.style.display=isTodoNB?'none':'';
   },150);
 }
 
@@ -4060,8 +4077,11 @@ function applyArt(){
   nb.artPack = pendingArtPack.map(item=>item.dataURL);
   nb.artTpl  = pendingArtTpl;
   nb.artRot  = pendingArtRot;
-  nb.tpl     = pendingArtTpl;
-  S.tpl      = pendingArtTpl;
+  // Never overwrite tpl on todo notebooks — it would break checkboxes/date picker
+  if(nb.tpl !== 'todo'){
+    nb.tpl = pendingArtTpl;
+    S.tpl  = pendingArtTpl;
+  }
 
   save();
   closeM('m-art');
