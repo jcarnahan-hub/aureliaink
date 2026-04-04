@@ -2867,6 +2867,13 @@ function flip(dir){
   let nxt=S.pg+dir;
   if(nxt>=nb.pages.length){
     if(S.autoOn){nxt=0;if(nb.colId&&nb.tpl==='pdf'){const col=S.collections.find(c=>c.id===nb.colId);if(col)nb.colOff=(nb.colOff+1)%col.pages.length;}}
+    else if(nb.tpl!=='pdf'){
+      // Auto-create new page when swiping/pressing → past last page
+      nb.pages.push('');
+      nb.stamps=nb.stamps||[];nb.stamps.push(nowStamp());
+      nxt=nb.pages.length-1;
+      toast('New page ✦','info');
+    }
     else return;
   }
   if(nxt<0)return;
