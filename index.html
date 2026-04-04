@@ -3108,12 +3108,48 @@ document.addEventListener('click',e=>{
 });
 
 /* ═══════ TOAST ═══════ */
-function toast(msg,type='info'){
+function toast(msg,type='info',duration=2800){
   const w=document.getElementById('toast-wrap');
   const t=document.createElement('div');t.className=`toast ${type}`;
   t.innerHTML=`<span class="ti">${type==='ok'?'✦':'✧'}</span>${msg}`;
   w.appendChild(t);
-  setTimeout(()=>{t.style.transition='opacity .3s,transform .3s';t.style.opacity='0';t.style.transform='translateX(14px)';setTimeout(()=>t.remove(),300);},2800);
+  setTimeout(()=>{t.style.transition='opacity .3s,transform .3s';t.style.opacity='0';t.style.transform='translateX(14px)';setTimeout(()=>t.remove(),300);},duration);
+}
+
+/* ── Full-screen upload progress overlay ── */
+function showUploadOverlay(current, total, filename){
+  let ov=document.getElementById('upload-overlay');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='upload-overlay';
+    ov.style.cssText=`position:fixed;inset:0;z-index:9999;
+      background:rgba(12,9,4,.88);backdrop-filter:blur(8px);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:32px;gap:16px;`;
+    ov.innerHTML=`
+      <div style="font-size:36px">🖼</div>
+      <div id="uov-title" style="font-family:Georgia,serif;color:var(--gold);font-size:20px;text-align:center">Uploading images…</div>
+      <div id="uov-file" style="font-size:13px;color:rgba(253,246,232,.6);text-align:center;max-width:280px;word-break:break-all"></div>
+      <div style="width:100%;max-width:320px;background:rgba(255,255,255,.08);border-radius:12px;height:12px;overflow:hidden">
+        <div id="uov-bar" style="height:100%;background:linear-gradient(90deg,var(--gold),#e8c96a);border-radius:12px;width:0%;transition:width .4s ease"></div>
+      </div>
+      <div id="uov-count" style="font-size:14px;color:rgba(253,246,232,.5)"></div>
+    `;
+    document.body.appendChild(ov);
+  }
+  const pct=Math.round((current/total)*100);
+  document.getElementById('uov-bar').style.width=pct+'%';
+  document.getElementById('uov-count').textContent=`${current} of ${total} images`;
+  document.getElementById('uov-file').textContent=filename?`"${filename}"` :'';
+  document.getElementById('uov-title').textContent=current===total?'Finalising…':'Uploading images…';
+}
+function hideUploadOverlay(){
+  const ov=document.getElementById('upload-overlay');
+  if(ov){
+    ov.style.opacity='0';
+    ov.style.transition='opacity .4s';
+    setTimeout(()=>ov.remove(),400);
+  }
 }
 
 /* ═══════ UTILS ═══════ */
@@ -4225,39 +4261,23 @@ async function handleArtUpload(e){
   if(skipped>0)toast(`${skipped} file${skipped!==1?'s':''} over 10MB skipped`,'info');
   if(!toLoad.length)return;
 
-  // Show progress bar
-  const progressWrap=document.getElementById('art-upload-progress');
-  const progressBar=document.getElementById('art-progress-bar');
-  const progressLbl=document.getElementById('art-progress-lbl');
-  const progressCount=document.getElementById('art-progress-count');
-  const artDrop=document.getElementById('art-drop');
-  if(progressWrap){progressWrap.style.display='block';}
-  if(artDrop)artDrop.style.opacity='0.4';
+  // Show full-screen overlay progress
+  showUploadOverlay(0, toLoad.length, toLoad[0].name);
 
   let loaded=0;
   for(const file of toLoad){
-    // Update progress label
-    if(progressLbl)progressLbl.textContent=`Uploading "${file.name}"…`;
-    if(progressCount)progressCount.textContent=`${loaded+1} of ${toLoad.length}`;
-    if(progressBar)progressBar.style.width=`${Math.round((loaded/toLoad.length)*100)}%`;
-
+    showUploadOverlay(loaded, toLoad.length, file.name);
     const imageId=uid();
     const url=await uploadFileToStorage(file,imageId);
     pendingArtPack.push({dataURL:url, name:file.name, imageId});
     loaded++;
-
-    // Update progress after each upload
-    if(progressBar)progressBar.style.width=`${Math.round((loaded/toLoad.length)*100)}%`;
-    if(progressCount)progressCount.textContent=`${loaded} of ${toLoad.length}`;
+    showUploadOverlay(loaded, toLoad.length, file.name);
   }
 
-  // Hide progress bar and restore drop zone
-  if(progressWrap)progressWrap.style.display='none';
-  if(progressBar)progressBar.style.width='0%';
-  if(artDrop)artDrop.style.opacity='';
-
+  // Hide overlay and show success
+  hideUploadOverlay();
   renderPackGrid();
-  toast(`${loaded} image${loaded!==1?'s':''} added ✦`,'ok');
+  toast(`${loaded} image${loaded!==1?'s':''} added ✦`,'ok',4000);
 }
 
 function selectArtTpl(btn,tpl){
