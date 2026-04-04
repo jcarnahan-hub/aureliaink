@@ -563,6 +563,37 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 /* When artwork is active — transparent bg so art shows, strong lines */
 .has-art .pg-css,
 .has-art #pg-css{background:transparent !important;}
+
+/* Dedicated line overlay — sits above artwork+cream layer, only lines no fill */
+#pg-line-overlay{
+  position:absolute;inset:0;z-index:3;pointer-events:none;
+  display:none;
+}
+.has-art #pg-line-overlay{display:block;}
+.has-art-lined #pg-line-overlay{
+  background-image:repeating-linear-gradient(
+    transparent,transparent 31px,
+    rgba(42,30,12,0.7) 31px,rgba(42,30,12,0.7) 32px);
+  background-position:0 40px;
+}
+.has-art-dotted #pg-line-overlay{
+  background-image:radial-gradient(circle,rgba(42,30,12,0.75) 1.5px,transparent 1.5px);
+  background-size:22px 22px;background-position:11px 11px;
+}
+.has-art-grid #pg-line-overlay{
+  background-image:
+    linear-gradient(rgba(42,30,12,0.7) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(42,30,12,0.7) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+.has-art-cornell #pg-line-overlay{
+  background-image:
+    linear-gradient(rgba(200,60,60,0.75) 1px,transparent 1px),
+    repeating-linear-gradient(transparent,transparent 31px,rgba(42,30,12,0.7) 31px,rgba(42,30,12,0.7) 32px),
+    linear-gradient(90deg,rgba(200,60,60,0.75) 1px,transparent 1px);
+  background-size:100% 72px,100% 32px,175px 100%;
+  background-position:0 68px,0 36px,171px 0;
+}
 .has-art .pat-lined{
   background:rgba(255,254,248,0.88) !important;
   background-image:repeating-linear-gradient(transparent,transparent 31px,rgba(60,40,10,.85) 31px,rgba(60,40,10,.55) 32px) !important;
@@ -1377,6 +1408,8 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
           <img class="pg-art-bg" id="pg-art-bg" src="" alt="">
           <!-- CSS line pattern — always on top of artwork, always aligned -->
           <div class="pg-css pat-lined" id="pg-css"></div>
+          <!-- Dedicated line overlay — crisp lines above artwork -->
+          <div id="pg-line-overlay"></div>
           <div class="pg-clean-ov"></div>
           <!-- WRITING LAYER: transparent overlay for PDF stationery typing -->
           <div id="writing-layer" contenteditable="false"
@@ -2335,6 +2368,11 @@ async function renderPage(){
   const lineMap={lined:'pat-lined',dotted:'pat-dotted',grid:'pat-grid',
                  blank:'pat-blank',cornell:'pat-cornell'};
   cssEl.className=`pg-css ${lineMap[tplForLines]||'pat-lined'}`;
+  // Update dedicated line overlay class for when artwork is active
+  pgEl.classList.remove('has-art-lined','has-art-dotted','has-art-grid','has-art-cornell','has-art-blank');
+  const artLineClass={'lined':'has-art-lined','dotted':'has-art-dotted','grid':'has-art-grid',
+                      'cornell':'has-art-cornell','blank':'has-art-blank','todo':'has-art-lined'};
+  pgEl.classList.add(artLineClass[tplForLines]||'has-art-lined');
 
   // Re-apply clean class
   pgEl.classList.toggle('clean',S.clean);
