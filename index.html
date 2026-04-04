@@ -432,10 +432,19 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   background:rgba(12,9,4,.75);border:1px solid rgba(201,168,76,.3);
   border-radius:8px;color:rgba(201,168,76,.9);
   font-size:16px;cursor:pointer;padding:2px 8px;
-  z-index:10;display:none;line-height:1.4;
+  z-index:10;line-height:1.4;
   backdrop-filter:blur(8px);
+  -webkit-tap-highlight-color:transparent;
 }
-.nb-card:hover .nb-menu-btn{display:block;}
+/* Desktop: show on hover only */
+@media(hover:hover){
+  .nb-menu-btn{display:none;}
+  .nb-card:hover .nb-menu-btn{display:block;}
+}
+/* Mobile/touch: always visible */
+@media(hover:none){
+  .nb-menu-btn{display:block;}
+}
 .nb-card-menu{
   position:fixed;z-index:1000;
   background:rgba(12,9,4,.97);border:1px solid rgba(201,168,76,.25);
@@ -2678,14 +2687,9 @@ function renderShelf(filter){
     </div>`;
     card.addEventListener('click',()=>{openNB(nb);closeSidebar();});
     let pressTimer;
-    card.addEventListener('touchstart',e=>{
-      pressTimer=setTimeout(()=>{
-        // Long press — show menu
-        openNBMenu({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY},nb.id);
-      },600);
-    },{passive:true});
-    card.addEventListener('touchend',()=>clearTimeout(pressTimer),{passive:true});
-    card.addEventListener('touchmove',()=>clearTimeout(pressTimer),{passive:true});
+    // No long press — use ⋯ button instead (avoids browser context menu conflict)
+    // Prevent browser context menu on the card image
+    card.addEventListener('contextmenu',e=>e.preventDefault());
     card.addEventListener('dblclick',()=>openCoverEdit(nb));
     grid.appendChild(card);
   });
