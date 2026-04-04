@@ -3334,7 +3334,8 @@ function fbInit(){
       else if(fbUnsubscribe){fbUnsubscribe();fbUnsubscribe=null;}
     });
     // Handle return from Google redirect sign-in
-    setTimeout(checkGoogleRedirect,500);
+    // Use 1500ms delay on mobile to ensure Firebase auth is fully ready
+    setTimeout(checkGoogleRedirect, /Mobi|Android/i.test(navigator.userAgent)?1500:500);
     console.log('AureliaInk: Firebase ready ✦');
   }catch(e){
     console.warn('AureliaInk Firebase init failed:',e.message);
@@ -3357,6 +3358,8 @@ function updateSyncUI(){
   if(fbUser){
     if(dot)dot.style.background='var(--sage)';
     if(fbDot)fbDot.style.background='var(--sage)';
+    const syncLbl=document.getElementById('sync-lbl');
+    if(syncLbl)syncLbl.textContent='Synced';
     const displayName=fbUser.displayName||fbUser.email.split('@')[0];
     if(statusTxt)statusTxt.textContent='Connected · '+displayName;
     // Update storage status
@@ -3369,9 +3372,12 @@ function updateSyncUI(){
     if(loggedIn)loggedIn.style.display='block';
     if(loggedOut)loggedOut.style.display='none';
   }else{
-    if(dot)dot.style.background='#666';
-    if(fbDot)fbDot.style.background='#666';
+    if(dot)dot.style.background='#e74c3c';
+    if(fbDot)fbDot.style.background='#e74c3c';
     if(statusTxt)statusTxt.textContent='Not signed in';
+    // Show "Sign In" in top bar instead of "Synced" when not authenticated
+    const syncLbl=document.getElementById('sync-lbl');
+    if(syncLbl)syncLbl.textContent='Sign In';
     if(loggedIn)loggedIn.style.display='none';
     if(loggedOut)loggedOut.style.display='block';
   }
@@ -3478,18 +3484,26 @@ async function fbGoogleSignIn(){
 }
 
 // Check for redirect result when app loads (handles mobile Google sign-in return)
+// Always call this — don't rely on sessionStorage flag which can be lost on redirect
 async function checkGoogleRedirect(){
   if(!fbAuth||!fbConfigured)return;
-  if(!sessionStorage.getItem('ai_google_redirect'))return;
-  sessionStorage.removeItem('ai_google_redirect');
   try{
     const {getRedirectResult}=window._fbModules;
     const result=await getRedirectResult(fbAuth);
     if(result?.user){
+      sessionStorage.removeItem('ai_google_redirect');
+      fbUser=result.user;
+      updateSyncUI();
+      fbStartListener();
+      closeM('m-auth');
       toast('Signed in with Google ✦','ok');
+    }else{
+      // No redirect result — check if already signed in via onAuthStateChanged
+      sessionStorage.removeItem('ai_google_redirect');
     }
   }catch(e){
     console.warn('Redirect sign-in result:',e.message);
+    sessionStorage.removeItem('ai_google_redirect');
   }
 }
 
