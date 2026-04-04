@@ -595,21 +595,21 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   background-position:0 68px,0 36px,171px 0;
 }
 .has-art .pat-lined{
-  background:rgba(255,254,248,0.88) !important;
+  background:rgba(255,254,248,0.65) !important;
   background-image:repeating-linear-gradient(transparent,transparent 31px,rgba(60,40,10,.85) 31px,rgba(60,40,10,.55) 32px) !important;
   background-position:0 40px !important;}
 .has-art .pat-dotted{
-  background:rgba(255,254,248,0.88) !important;
+  background:rgba(255,254,248,0.65) !important;
   background-image:radial-gradient(circle,rgba(60,40,10,.9) 1px,transparent 1px) !important;
   background-size:22px 22px !important;background-position:11px 11px !important;}
 .has-art .pat-grid{
-  background:rgba(255,254,248,0.88) !important;
+  background:rgba(255,254,248,0.65) !important;
   background-image:linear-gradient(rgba(60,40,10,.85) 1px,transparent 1px),
     linear-gradient(90deg,rgba(60,40,10,.85) 1px,transparent 1px) !important;
   background-size:22px 22px !important;}
-.has-art .pat-blank{background:rgba(255,254,248,0.88) !important;}
+.has-art .pat-blank{background:rgba(255,254,248,0.65) !important;}
 .has-art .pat-cornell{
-  background:rgba(255,254,248,0.88) !important;
+  background:rgba(255,254,248,0.65) !important;
   background-image:
     linear-gradient(rgba(200,60,60,.85) 1px,transparent 1px),
     repeating-linear-gradient(transparent,transparent 31px,rgba(60,40,10,.85) 31px,rgba(60,40,10,.55) 32px),
@@ -619,11 +619,11 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 
 /* Textarea background over artwork */
 .has-art #plain-textarea{
-  background:rgba(255,254,248,0.88) !important;
+  background:rgba(255,254,248,0.65) !important;
 }
 /* Todo body over artwork — must match */
 .has-art #pg-body-todo{
-  background:rgba(255,254,248,0.88) !important;
+  background:rgba(255,254,248,0.65) !important;
 }
 
 /* Clean-view overlay — dims the artwork for easier reading */
@@ -913,7 +913,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 /* Ink toolbar — slides up from bottom when in draw mode */
 #ink-toolbar{
   position:fixed;
-  bottom:calc(var(--flip-h) + 48px + var(--safe-bottom));
+  bottom:calc(var(--flip-h) + 8px + var(--safe-bottom));
   left:50%;
   transform:translateX(-50%) translateY(20px);
   z-index:61;
@@ -928,7 +928,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   align-items:center;
   box-shadow:0 6px 28px rgba(0,0,0,.6);
   backdrop-filter:blur(16px);
-  flex-wrap:nowrap;
+  flex-wrap:wrap;
   max-width:calc(100vw - 24px);
   overflow-x:auto;
 }
@@ -1067,8 +1067,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 /* ── FLOATING BACK BUTTON ── */
 #float-back{
   position:fixed;
-  /* Sits above the flip controls row (~116px from bottom) */
-  bottom:calc(120px + var(--safe-bottom));
+  bottom:calc(var(--flip-h) + 8px + var(--safe-bottom));
   left:14px;
   z-index:200;
   background:rgba(17,16,9,.92);
@@ -1085,6 +1084,12 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 }
 #float-back:active{transform:scale(.94);}
 #float-back.show{display:flex;}
+/* In draw mode, move back button to top so it doesn't clash with ink toolbar */
+.ink-mode #float-back.show{
+  bottom:auto;
+  top:calc(var(--topbar-h,56px) + 8px);
+  left:14px;
+}
 
 /* ── TASK BADGE on notebook card ── */
 .nb-task-badge{
@@ -1871,8 +1876,10 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   <button class="ink-style" data-style="pencil" onclick="setInkStyle('pencil',this)">PC</button>
   <button class="ink-style" data-style="highlight" onclick="setInkStyle('highlight',this)">HL</button>
   <div class="ink-tool-sep"></div>
-  <!-- Actions -->
-  <button class="ink-action" id="ink-eraser-btn" onclick="toggleEraser()" title="Eraser">⌫</button>
+  <!-- Eraser sizes -->
+  <button class="ink-action ink-eraser-sz" id="ink-eraser-s" onclick="setEraser(3,this)" title="Small eraser">◻S</button>
+  <button class="ink-action ink-eraser-sz" id="ink-eraser-m" onclick="setEraser(8,this)" title="Medium eraser">◻M</button>
+  <button class="ink-action ink-eraser-sz" id="ink-eraser-l" onclick="setEraser(16,this)" title="Large eraser">◻L</button>
   <button class="ink-action" onclick="inkUndo()" title="Undo">↩</button>
   <button class="ink-action" onclick="inkRedo()" title="Redo">↪</button>
   <button class="ink-action" onclick="clearInkPage()" title="Clear page" style="color:rgba(212,132,122,.5)">🗑</button>
@@ -2160,30 +2167,31 @@ function closeSidebar(){
 /* ═══════ STORAGE ═══════ */
 function save(){
   try{
-    // Strip artPacks out of notebooks before saving to avoid localStorage overflow
-    // artPacks are saved separately under ai_artpacks
-    const artPacks={};
-    const notebooksSlim=S.notebooks.map(nb=>{
-      if(nb.artPack&&nb.artPack.length){
-        artPacks[nb.id]=nb.artPack;
-        return {...nb,artPack:[]};  // store empty array in main key
-      }
-      return nb;
-    });
-    localStorage.setItem('ai_nb',JSON.stringify(notebooksSlim));
+    saveNotebooksLocal(S.notebooks);
     localStorage.setItem('ai_qn',JSON.stringify(S.quickNotes));
     localStorage.setItem('ai_folders',JSON.stringify(S.folders));
     try{localStorage.setItem('ai_col',JSON.stringify(S.collections));}catch(e){}
-    // Save artPacks separately — each notebook's images in its own key
-    Object.entries(artPacks).forEach(([nbId,pack])=>{
-      try{localStorage.setItem('ai_ap_'+nbId,JSON.stringify(pack));}catch(e){
-        console.warn('artPack too large for localStorage, try signing in to sync');
-        toast('Image too large — sign in to save artwork across devices','info');
-      }
-    });
   }catch(e){console.warn('save error:',e);}
   // NOTE: Firebase sync is triggered separately via fbSyncDebounced()
   // NOT here — to avoid save() loops
+}
+
+/* Helper — always use this to write notebooks to localStorage */
+function saveNotebooksLocal(notebooks){
+  const artPacks={};
+  const slim=notebooks.map(nb=>{
+    if(nb.artPack&&nb.artPack.length){
+      artPacks[nb.id]=nb.artPack;
+      return {...nb,artPack:[]};
+    }
+    return nb;
+  });
+  localStorage.setItem('ai_nb',JSON.stringify(slim));
+  Object.entries(artPacks).forEach(([nbId,pack])=>{
+    try{localStorage.setItem('ai_ap_'+nbId,JSON.stringify(pack));}catch(e){
+      console.warn('artPack too large for localStorage');
+    }
+  });
 }
 function load(){
   try{
@@ -3508,7 +3516,7 @@ function fbStartListener(){
     if(data.folders)S.folders=data.folders;
     // Save to localStorage only — do NOT push back to Firebase
     try{
-      localStorage.setItem('ai_nb',JSON.stringify(S.notebooks));
+      saveNotebooksLocal(S.notebooks);
       localStorage.setItem('ai_qn',JSON.stringify(S.quickNotes));
       localStorage.setItem('ai_folders',JSON.stringify(S.folders));
     }catch(e){}
@@ -3890,7 +3898,7 @@ window.autoSave=function(){
   nb.modified=new Date().toISOString();
   nb.tpl=S.tpl;
   try{
-    localStorage.setItem('ai_nb',JSON.stringify(S.notebooks));
+    saveNotebooksLocal(S.notebooks);
     localStorage.setItem('ai_qn',JSON.stringify(S.quickNotes));
     localStorage.setItem('ai_folders',JSON.stringify(S.folders));
     try{localStorage.setItem('ai_col',JSON.stringify(S.collections));}catch(e){}
@@ -4881,6 +4889,7 @@ const INK = {
   width: 3,
   style: 'ballpoint',   // ballpoint|marker|brush|pencil|highlight
   eraser: false,
+  eraserWidth: null,    // size of eraser (3=small, 8=medium, 16=large)
   drawing: false,
   currentStroke: null,
   strokes: [],          // all strokes for current page
@@ -4931,7 +4940,8 @@ function setInkMode(mode){
     btnDraw?.classList.remove('active');
     if(drawTbb)drawTbb.style.background='';
     INK.eraser=false;
-    document.getElementById('ink-eraser-btn')?.classList.remove('active');
+    INK.eraserWidth=null;
+    document.querySelectorAll('.ink-eraser-sz').forEach(b=>b.classList.remove('active'));
     document.body.style.overflow='';
     toast('⌨️ Type mode','info');
   }
@@ -5175,7 +5185,8 @@ function initInkCanvas(){
 function setInkColor(color,el){
   INK.color=color;
   INK.eraser=false;
-  document.getElementById('ink-eraser-btn')?.classList.remove('active');
+  INK.eraserWidth=null;
+  document.querySelectorAll('.ink-eraser-sz').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.ink-color').forEach(c=>c.classList.remove('active'));
   el?.classList.add('active');
 }
@@ -5189,13 +5200,23 @@ function setInkStyle(style,el){
   document.querySelectorAll('.ink-style').forEach(b=>b.classList.remove('active'));
   el?.classList.add('active');
 }
-function toggleEraser(){
-  INK.eraser=!INK.eraser;
-  document.getElementById('ink-eraser-btn')?.classList.toggle('active',INK.eraser);
-  if(INK.eraser){
-    document.querySelectorAll('.ink-color').forEach(c=>c.classList.remove('active'));
+function setEraser(width, el){
+  // If clicking already-active eraser size, toggle eraser off
+  if(INK.eraser && INK.eraserWidth===width){
+    INK.eraser=false;
+    INK.eraserWidth=null;
+    document.querySelectorAll('.ink-eraser-sz').forEach(b=>b.classList.remove('active'));
+    return;
   }
+  INK.eraser=true;
+  INK.eraserWidth=width;
+  INK.width=width;
+  document.querySelectorAll('.ink-eraser-sz').forEach(b=>b.classList.remove('active'));
+  el?.classList.add('active');
+  // Deactivate color swatches visually
+  document.querySelectorAll('.ink-color').forEach(c=>c.classList.remove('active'));
 }
+function toggleEraser(){setEraser(8, document.getElementById('ink-eraser-m'));}
 
 /* ── Undo / Redo ── */
 function inkUndo(){
