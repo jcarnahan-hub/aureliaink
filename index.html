@@ -3390,25 +3390,62 @@ function emailTodoList(){
 }
 
 function showTodoEmailFallback(body, title){
+  // Remove any existing panel first
+  const existing=document.getElementById('todo-email-panel');
+  if(existing)existing.remove();
+
   const ov=document.createElement('div');
-  ov.style.cssText=`position:fixed;inset:0;z-index:9999;background:rgba(12,9,4,.95);
-    display:flex;flex-direction:column;padding:24px;gap:12px;`;
+  ov.id='todo-email-panel';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(12,9,4,.95);display:flex;flex-direction:column;padding:24px;gap:12px;';
+
+  // Use unique IDs so selectors work reliably
+  const taId='todo-email-ta-'+Date.now();
+  const copyBtnId='todo-copy-btn-'+Date.now();
+
   ov.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div style="font-family:Georgia,serif;color:var(--gold);font-size:18px">${title}</div>
-      <button onclick="this.closest('div[style]').remove()" style="background:none;border:1px solid rgba(201,168,76,.3);color:var(--gold);border-radius:8px;padding:6px 12px;cursor:pointer">✕ Close</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <div style="font-family:Georgia,serif;color:var(--gold);font-size:18px">📧 ${title}</div>
+      <button id="todo-panel-close" style="background:none;border:1px solid rgba(201,168,76,.3);color:var(--gold);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px">✕ Close</button>
     </div>
-    <p style="font-size:12px;color:rgba(253,246,232,.5)">Copy this and paste into your email app:</p>
-    <textarea style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.2);
-      border-radius:10px;padding:14px;color:var(--cream);font-family:inherit;font-size:14px;
-      line-height:1.7;resize:none" readonly>${body}</textarea>
-    <button onclick="navigator.clipboard.writeText(document.querySelector('textarea').value).then(()=>{this.textContent='✓ Copied!';this.style.background='var(--sage)';})"
-      style="padding:14px;background:linear-gradient(135deg,var(--gold),#a8823a);border:none;
-      border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;color:#110a02">
+    <p style="font-size:12px;color:rgba(253,246,232,.5);flex-shrink:0">Copy this and paste into your email app:</p>
+    <textarea id="${taId}" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.2);border-radius:10px;padding:14px;color:#fdf6e8;font-family:inherit;font-size:14px;line-height:1.7;resize:none;min-height:200px" readonly></textarea>
+    <button id="${copyBtnId}" style="padding:14px;background:linear-gradient(135deg,#c9a84c,#a8823a);border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;color:#110a02;flex-shrink:0">
       📋 Copy to Clipboard
     </button>
   `;
+
   document.body.appendChild(ov);
+
+  // Set textarea value directly (avoids HTML encoding issues)
+  document.getElementById(taId).value=body;
+
+  // Close button
+  document.getElementById('todo-panel-close').addEventListener('click',()=>{
+    ov.remove();
+  });
+
+  // Copy button — select all text then copy
+  document.getElementById(copyBtnId).addEventListener('click',()=>{
+    const ta=document.getElementById(taId);
+    ta.select();
+    ta.setSelectionRange(0,99999); // mobile
+    try{
+      // Modern clipboard API
+      navigator.clipboard.writeText(ta.value).then(()=>{
+        const btn=document.getElementById(copyBtnId);
+        if(btn){btn.textContent='✓ Copied!';btn.style.background='#7a9e7e';}
+      }).catch(()=>{
+        // Fallback for older browsers
+        document.execCommand('copy');
+        const btn=document.getElementById(copyBtnId);
+        if(btn){btn.textContent='✓ Copied!';btn.style.background='#7a9e7e';}
+      });
+    }catch(e){
+      document.execCommand('copy');
+      const btn=document.getElementById(copyBtnId);
+      if(btn){btn.textContent='✓ Copied!';btn.style.background='#7a9e7e';}
+    }
+  });
 }
 
 function deleteNB(nb){
