@@ -3374,8 +3374,62 @@ function emailTodoList(){
 
   const subject=encodeURIComponent(`${nb.title} — ${today}`);
   const encodedBody=encodeURIComponent(body);
-  window.location.href=`mailto:?subject=${subject}&body=${encodedBody}`;
-  toast('Opening email app… ✦','ok');
+  const mailtoLink=`mailto:?subject=${subject}&body=${encodedBody}`;
+
+  // Try opening via a temporary anchor click — works better on mobile
+  const a=document.createElement('a');
+  a.href=mailtoLink;
+  a.target='_blank';
+  a.rel='noopener';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>a.remove(),500);
+
+  // Also show the list in a copyable popup as fallback
+  setTimeout(()=>{
+    if(confirm('If your email app did not open, tap OK to see your list so you can copy and paste it.')){
+      const win=window.open('','_blank','width=600,height=500');
+      if(win){
+        win.document.write(`<html><head><title>${nb.title}</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <style>body{font-family:system-ui,sans-serif;padding:24px;line-height:1.8;max-width:600px;margin:0 auto}
+        h2{color:#333}pre{white-space:pre-wrap;font-family:inherit;font-size:16px}
+        button{margin-top:16px;padding:12px 24px;background:#c9a84c;border:none;border-radius:8px;font-size:16px;cursor:pointer}</style>
+        </head><body>
+        <h2>${nb.title}</h2>
+        <pre id="content">${body.replace(/</g,'&lt;')}</pre>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('content').innerText).then(()=>alert('Copied!'))">📋 Copy to Clipboard</button>
+        </body></html>`);
+        win.document.close();
+      }else{
+        // Popup blocked — show in textarea overlay
+        showTodoEmailFallback(body, nb.title);
+      }
+    }
+  },2000);
+  toast('Opening email app… ✦','ok',5000);
+}
+
+function showTodoEmailFallback(body, title){
+  const ov=document.createElement('div');
+  ov.style.cssText=`position:fixed;inset:0;z-index:9999;background:rgba(12,9,4,.95);
+    display:flex;flex-direction:column;padding:24px;gap:12px;`;
+  ov.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-family:Georgia,serif;color:var(--gold);font-size:18px">${title}</div>
+      <button onclick="this.closest('div[style]').remove()" style="background:none;border:1px solid rgba(201,168,76,.3);color:var(--gold);border-radius:8px;padding:6px 12px;cursor:pointer">✕ Close</button>
+    </div>
+    <p style="font-size:12px;color:rgba(253,246,232,.5)">Copy this and paste into your email app:</p>
+    <textarea style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.2);
+      border-radius:10px;padding:14px;color:var(--cream);font-family:inherit;font-size:14px;
+      line-height:1.7;resize:none" readonly>${body}</textarea>
+    <button onclick="navigator.clipboard.writeText(document.querySelector('textarea').value).then(()=>{this.textContent='✓ Copied!';this.style.background='var(--sage)';})"
+      style="padding:14px;background:linear-gradient(135deg,var(--gold),#a8823a);border:none;
+      border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;color:#110a02">
+      📋 Copy to Clipboard
+    </button>
+  `;
+  document.body.appendChild(ov);
 }
 
 function deleteNB(nb){
