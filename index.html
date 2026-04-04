@@ -923,19 +923,27 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   background:rgba(12,9,4,.95);
   border:1px solid rgba(201,168,76,.25);
   border-radius:20px;
-  padding:8px 12px;
-  gap:6px;
-  align-items:center;
+  padding:8px 10px;
+  gap:4px;
+  align-items:stretch;
   box-shadow:0 6px 28px rgba(0,0,0,.6);
   backdrop-filter:blur(16px);
-  flex-wrap:wrap;
-  max-width:calc(100vw - 24px);
-  overflow-x:auto;
+  flex-direction:column;
+  max-width:calc(100vw - 16px);
+  width:calc(100vw - 16px);
 }
 #ink-toolbar.show{
   display:flex;
   opacity:1;
   transform:translateX(-50%) translateY(0);
+}
+.ink-toolbar-row{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:4px;
+  justify-content:center;
+  flex-wrap:nowrap;
 }
 .ink-tool-sep{
   width:1px;height:24px;
@@ -1856,33 +1864,35 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 
 <!-- INK TOOLBAR (shown in draw mode) -->
 <div id="ink-toolbar">
-  <!-- Colors -->
-  <div class="ink-color active" data-color="#1a1206" style="background:#1a1206" title="Black" onclick="setInkColor('#1a1206',this)"></div>
-  <div class="ink-color" data-color="#1a3a6e" style="background:#1a3a6e" title="Blue" onclick="setInkColor('#1a3a6e',this)"></div>
-  <div class="ink-color" data-color="#8b1a1a" style="background:#8b1a1a" title="Red" onclick="setInkColor('#8b1a1a',this)"></div>
-  <div class="ink-color" data-color="#c9a84c" style="background:#c9a84c" title="Gold" onclick="setInkColor('#c9a84c',this)"></div>
-  <div class="ink-color" data-color="#2d6a4f" style="background:#2d6a4f" title="Green" onclick="setInkColor('#2d6a4f',this)"></div>
-  <div class="ink-color" data-color="#4a1a6e" style="background:#4a1a6e" title="Purple" onclick="setInkColor('#4a1a6e',this)"></div>
-  <div class="ink-tool-sep"></div>
-  <!-- Widths -->
-  <button class="ink-width" data-w="1.5" onclick="setInkWidth(1.5,this)">F</button>
-  <button class="ink-width active" data-w="3" onclick="setInkWidth(3,this)">M</button>
-  <button class="ink-width" data-w="6" onclick="setInkWidth(6,this)">T</button>
-  <div class="ink-tool-sep"></div>
-  <!-- Styles -->
-  <button class="ink-style active" data-style="ballpoint" onclick="setInkStyle('ballpoint',this)">BP</button>
-  <button class="ink-style" data-style="marker" onclick="setInkStyle('marker',this)">MK</button>
-  <button class="ink-style" data-style="brush" onclick="setInkStyle('brush',this)">BR</button>
-  <button class="ink-style" data-style="pencil" onclick="setInkStyle('pencil',this)">PC</button>
-  <button class="ink-style" data-style="highlight" onclick="setInkStyle('highlight',this)">HL</button>
-  <div class="ink-tool-sep"></div>
-  <!-- Eraser sizes -->
-  <button class="ink-action ink-eraser-sz" id="ink-eraser-s" onclick="setEraser(3,this)" title="Small eraser">◻S</button>
-  <button class="ink-action ink-eraser-sz" id="ink-eraser-m" onclick="setEraser(8,this)" title="Medium eraser">◻M</button>
-  <button class="ink-action ink-eraser-sz" id="ink-eraser-l" onclick="setEraser(16,this)" title="Large eraser">◻L</button>
-  <button class="ink-action" onclick="inkUndo()" title="Undo">↩</button>
-  <button class="ink-action" onclick="inkRedo()" title="Redo">↪</button>
-  <button class="ink-action" onclick="clearInkPage()" title="Clear page" style="color:rgba(212,132,122,.5)">🗑</button>
+  <!-- Row 1: Colors + Eraser sizes -->
+  <div class="ink-toolbar-row">
+    <div class="ink-color active" data-color="#1a1206" style="background:#1a1206" title="Black" onclick="setInkColor('#1a1206',this)"></div>
+    <div class="ink-color" data-color="#1a3a6e" style="background:#1a3a6e" title="Blue" onclick="setInkColor('#1a3a6e',this)"></div>
+    <div class="ink-color" data-color="#8b1a1a" style="background:#8b1a1a" title="Red" onclick="setInkColor('#8b1a1a',this)"></div>
+    <div class="ink-color" data-color="#c9a84c" style="background:#c9a84c" title="Gold" onclick="setInkColor('#c9a84c',this)"></div>
+    <div class="ink-color" data-color="#2d6a4f" style="background:#2d6a4f" title="Green" onclick="setInkColor('#2d6a4f',this)"></div>
+    <div class="ink-color" data-color="#4a1a6e" style="background:#4a1a6e" title="Purple" onclick="setInkColor('#4a1a6e',this)"></div>
+    <div class="ink-tool-sep"></div>
+    <button class="ink-action ink-eraser-sz" id="ink-eraser-s" onclick="setEraser(3,this)" title="Small eraser">🧹S</button>
+    <button class="ink-action ink-eraser-sz" id="ink-eraser-m" onclick="setEraser(8,this)" title="Medium eraser">🧹M</button>
+    <button class="ink-action ink-eraser-sz" id="ink-eraser-l" onclick="setEraser(16,this)" title="Large eraser">🧹L</button>
+    <div class="ink-tool-sep"></div>
+    <button class="ink-action" onclick="inkUndo()" title="Undo">↩</button>
+    <button class="ink-action" onclick="inkRedo()" title="Redo">↪</button>
+    <button class="ink-action" onclick="clearInkPage()" title="Clear page" style="color:rgba(212,132,122,.7)">🗑</button>
+  </div>
+  <!-- Row 2: Widths + Styles -->
+  <div class="ink-toolbar-row">
+    <button class="ink-width" data-w="1.5" onclick="setInkWidth(1.5,this)">Fine</button>
+    <button class="ink-width active" data-w="3" onclick="setInkWidth(3,this)">Med</button>
+    <button class="ink-width" data-w="6" onclick="setInkWidth(6,this)">Thick</button>
+    <div class="ink-tool-sep"></div>
+    <button class="ink-style active" data-style="ballpoint" onclick="setInkStyle('ballpoint',this)">Pen</button>
+    <button class="ink-style" data-style="marker" onclick="setInkStyle('marker',this)">Marker</button>
+    <button class="ink-style" data-style="brush" onclick="setInkStyle('brush',this)">Brush</button>
+    <button class="ink-style" data-style="pencil" onclick="setInkStyle('pencil',this)">Pencil</button>
+    <button class="ink-style" data-style="highlight" onclick="setInkStyle('highlight',this)">Hi-lite</button>
+  </div>
 </div>
 
 <!-- FLOATING BACK BUTTON -->
