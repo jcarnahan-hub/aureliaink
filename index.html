@@ -911,7 +911,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 .ink-mode #plain-textarea{pointer-events:none;}
 .ink-mode #writing-layer{pointer-events:none;}
 /* Push page content up so ink toolbar doesn't cover it */
-.ink-mode .page-reader{padding-bottom:var(--ink-toolbar-h,110px);}
+/* ink-mode page-reader height set dynamically via JS */
 
 /* Mode toggle pill — floats above flip row */
 #ink-mode-toggle{
@@ -5322,13 +5322,19 @@ function setInkMode(mode){
     resizeInkCanvas();
     loadInkPage();
     document.body.style.overflow='hidden';
-    // Measure actual toolbar height and pad page-reader so toolbar never covers content
+    // Measure actual toolbar height and shrink page-reader to fit above it
     requestAnimationFrame(()=>{
       const tb=document.getElementById('ink-toolbar');
       const pr=document.querySelector('.page-reader');
+      const flipRow=document.querySelector('.flip-row');
       if(tb&&pr){
-        const h=tb.offsetHeight+56; // +56 for flip-row height
-        pr.style.paddingBottom=h+'px';
+        const tbH=tb.offsetHeight;
+        const flipH=flipRow?flipRow.offsetHeight:48;
+        const safeB=parseInt(getComputedStyle(document.documentElement)
+          .getPropertyValue('--safe-bottom')||'0');
+        // Set explicit height so page fills exactly the space above toolbar
+        pr.style.height=`calc(100% - ${tbH+flipH+safeB}px)`;
+        pr.style.paddingBottom='0';
       }
     });
     toast('✏️ Draw mode — use your stylus or finger','info');
@@ -5343,9 +5349,9 @@ function setInkMode(mode){
     INK.eraserWidth=null;
     document.querySelectorAll('.ink-eraser-sz').forEach(b=>b.classList.remove('active'));
     document.body.style.overflow='';
-    // Reset page-reader padding
+    // Reset page-reader to natural size
     const pr=document.querySelector('.page-reader');
-    if(pr)pr.style.paddingBottom='';
+    if(pr){pr.style.height='';pr.style.paddingBottom='';}
     toast('⌨️ Type mode','info');
   }
 }
