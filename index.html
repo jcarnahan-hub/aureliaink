@@ -3452,34 +3452,37 @@ async function fbGoogleSignIn(){
   try{
     const {GoogleAuthProvider,signInWithPopup,signInWithRedirect}=window._fbModules;
     const provider=new GoogleAuthProvider();
-    // Popup works on desktop; on mobile/tablet use redirect for better UX
-    const isMobile=/Mobi|Android|iPad|iPhone/i.test(navigator.userAgent);
-    if(isMobile){
-      // Store intent so we show a message after redirect returns
-      sessionStorage.setItem('ai_google_redirect','1');
-      await signInWithRedirect(fbAuth,provider);
-      // Page will reload — onAuthStateChanged handles the rest
-    }else{
+    // Always try popup first — works on mobile Chrome when triggered by tap
+    try{
       const result=await signInWithPopup(fbAuth,provider);
-      toast('Signed in with Google ✦','ok');
-      closeM('m-auth');
+      if(result?.user){
+        fbUser=result.user;
+        updateSyncUI();
+        fbStartListener();
+        closeM('m-auth');
+        toast('Signed in with Google ✦','ok');
+      }
+    }catch(popupErr){
+      // Only fall back to redirect if popup is explicitly blocked
+      if(popupErr.code==='auth/popup-blocked'||popupErr.code==='auth/popup-closed-by-user'){
+        const errEl=document.getElementById('auth-err');
+        if(errEl)errEl.textContent=popupErr.code==='auth/popup-closed-by-user'
+          ?'Sign-in cancelled — please try again.'
+          :'Popup blocked by browser. Trying redirect…';
+        if(popupErr.code==='auth/popup-blocked'){
+          sessionStorage.setItem('ai_google_redirect','1');
+          await signInWithRedirect(fbAuth,provider);
+        }
+      }else{
+        const errEl=document.getElementById('auth-err');
+        if(errEl)errEl.textContent=
+            popupErr.code==='auth/network-request-failed'?'No internet connection.'
+          : popupErr.message;
+      }
     }
   }catch(e){
     const errEl=document.getElementById('auth-err');
-    if(errEl)errEl.textContent=
-        e.code==='auth/popup-closed-by-user'  ? 'Sign-in cancelled.'
-      : e.code==='auth/popup-blocked'         ? 'Popup blocked — trying redirect…'
-      : e.code==='auth/network-request-failed'? 'No internet connection.'
-      : e.code==='auth/cancelled-popup-request'? 'Sign-in cancelled.'
-      : e.message;
-    // If popup was blocked, fall back to redirect
-    if(e.code==='auth/popup-blocked'){
-      try{
-        const {GoogleAuthProvider,signInWithRedirect}=window._fbModules;
-        sessionStorage.setItem('ai_google_redirect','1');
-        await signInWithRedirect(fbAuth,new GoogleAuthProvider());
-      }catch(e2){}
-    }
+    if(errEl)errEl.textContent=e.message;
   }
 }
 
