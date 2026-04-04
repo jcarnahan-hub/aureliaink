@@ -436,15 +436,8 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   backdrop-filter:blur(8px);
   -webkit-tap-highlight-color:transparent;
 }
-/* Desktop: show on hover only */
-@media(hover:hover){
-  .nb-menu-btn{display:none;}
-  .nb-card:hover .nb-menu-btn{display:block;}
-}
-/* Mobile/touch: always visible */
-@media(hover:none){
-  .nb-menu-btn{display:block;}
-}
+/* Always visible on all devices */
+.nb-menu-btn{display:block;}
 .nb-card-menu{
   position:fixed;z-index:1000;
   background:rgba(12,9,4,.97);border:1px solid rgba(201,168,76,.25);
