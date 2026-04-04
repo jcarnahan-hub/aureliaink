@@ -427,6 +427,33 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 @media(min-width:600px){.nb-grid{grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:18px}}
 
 /* Notebook card */
+.nb-menu-btn{
+  position:absolute;top:6px;right:6px;
+  background:rgba(12,9,4,.75);border:1px solid rgba(201,168,76,.3);
+  border-radius:8px;color:rgba(201,168,76,.9);
+  font-size:16px;cursor:pointer;padding:2px 8px;
+  z-index:10;display:none;line-height:1.4;
+  backdrop-filter:blur(8px);
+}
+.nb-card:hover .nb-menu-btn{display:block;}
+.nb-card-menu{
+  position:fixed;z-index:1000;
+  background:rgba(12,9,4,.97);border:1px solid rgba(201,168,76,.25);
+  border-radius:12px;padding:6px;
+  box-shadow:0 8px 32px rgba(0,0,0,.7);
+  backdrop-filter:blur(16px);
+  min-width:160px;
+}
+.nb-card-menu button{
+  display:block;width:100%;text-align:left;
+  padding:10px 14px;background:none;border:none;
+  color:var(--cream);font-family:var(--font-u);font-size:13px;
+  cursor:pointer;border-radius:8px;transition:background .15s;
+}
+.nb-card-menu button:hover{background:rgba(201,168,76,.12);}
+.nb-card-menu button.danger{color:#e74c3c;}
+.nb-card-menu button.danger:hover{background:rgba(231,76,60,.12);}
+.nb-card-menu-sep{height:1px;background:rgba(201,168,76,.12);margin:4px 0;}
 .nb-card{cursor:pointer;position:relative;
   transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
 .nb-card:hover,.nb-card:active{transform:translateY(-7px) rotate(-1deg)}
@@ -2647,11 +2674,18 @@ function renderShelf(filter){
         <div class="nb-meta">${nb.pages.length}pg · ${flLbl(nb.folder)}</div>
       </div>
       <div class="nb-badge">${flIco(nb.folder)}</div>
+      <button class="nb-menu-btn" onclick="event.stopPropagation();openNBMenu(event,'${nb.id}')" title="Options">⋯</button>
     </div>`;
     card.addEventListener('click',()=>{openNB(nb);closeSidebar();});
     let pressTimer;
-    card.addEventListener('touchstart',()=>{pressTimer=setTimeout(()=>openCoverEdit(nb),700)},{passive:true});
+    card.addEventListener('touchstart',e=>{
+      pressTimer=setTimeout(()=>{
+        // Long press — show menu
+        openNBMenu({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY},nb.id);
+      },600);
+    },{passive:true});
     card.addEventListener('touchend',()=>clearTimeout(pressTimer),{passive:true});
+    card.addEventListener('touchmove',()=>clearTimeout(pressTimer),{passive:true});
     card.addEventListener('dblclick',()=>openCoverEdit(nb));
     grid.appendChild(card);
   });
@@ -3206,6 +3240,55 @@ function openCoverEdit(nb){
   btn.textContent='Save Changes ✦';
   btn.onclick=()=>saveNBEdits(nb);
   openM('m-nb');
+}
+
+/* ── Notebook card ⋯ menu ── */
+let _nbMenuOpen=null;
+function openNBMenu(e, nbId){
+  // Close any existing menu
+  closeNBMenu();
+  const nb=S.notebooks.find(n=>n.id===nbId);
+  if(!nb)return;
+
+  const menu=document.createElement('div');
+  menu.className='nb-card-menu';
+  menu.id='nb-card-menu-popup';
+  menu.innerHTML=`
+    <button onclick="closeNBMenu();openCoverEdit(window._nbMenuNB)">✏️ Edit Notebook</button>
+    <button onclick="closeNBMenu();renameNB(window._nbMenuNB)">🏷 Rename</button>
+    <div class="nb-card-menu-sep"></div>
+    <button class="danger" onclick="closeNBMenu();deleteNB(window._nbMenuNB)">🗑 Delete Notebook</button>
+  `;
+  window._nbMenuNB=nb;
+
+  // Position near the click
+  document.body.appendChild(menu);
+  const rect=menu.getBoundingClientRect();
+  let x=e.clientX, y=e.clientY;
+  if(x+160>window.innerWidth)x=window.innerWidth-170;
+  if(y+140>window.innerHeight)y=window.innerHeight-150;
+  menu.style.left=x+'px';
+  menu.style.top=y+'px';
+
+  // Close on outside click
+  setTimeout(()=>document.addEventListener('click',closeNBMenu,{once:true}),10);
+  _nbMenuOpen=menu;
+}
+function closeNBMenu(){
+  const m=document.getElementById('nb-card-menu-popup');
+  if(m)m.remove();
+  _nbMenuOpen=null;
+}
+function deleteNB(nb){
+  if(!nb)return;
+  if(!confirm(`Delete "${nb.title}"? This cannot be undone.`))return;
+  S.notebooks=S.notebooks.filter(n=>n.id!==nb.id);
+  // Clean up localStorage artpack key
+  try{localStorage.removeItem('ai_ap_'+nb.id);}catch(e){}
+  save();fbSyncDebounced();
+  renderShelf(S.folder==='all'?null:S.folder);
+  updateCounts();
+  toast(`"${nb.title}" deleted ✦`,'ok');
 }
 
 function saveNBEdits(nb){
