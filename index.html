@@ -625,6 +625,9 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 .has-art #pg-body-todo{
   background:rgba(255,254,248,0.65) !important;
 }
+#pg-body-todo{
+  pointer-events:auto !important;
+}
 
 /* Clean-view overlay — dims the artwork for easier reading */
 .pg-clean-ov{position:absolute;inset:0;z-index:2;border-radius:inherit;
@@ -877,6 +880,8 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 .ink-mode #ink-canvas{display:block;}
 .ink-mode #plain-textarea{pointer-events:none;}
 .ink-mode #writing-layer{pointer-events:none;}
+/* Push page content up so ink toolbar doesn't cover it */
+.ink-mode .page-reader{padding-bottom:90px;}
 
 /* Mode toggle pill — floats above flip row */
 #ink-mode-toggle{
@@ -1942,7 +1947,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 </div>
 
 <!-- DATE PICKER MODAL -->
-<div class="modal-ov" id="m-datepick" style="z-index:600">
+<div class="modal-ov" id="m-datepick" style="z-index:2000">
   <div class="modal" style="max-width:340px">
     <div class="modal-title">📅 Set Due Date</div>
     <div id="dp-cal" style="margin-bottom:14px"></div>
@@ -2418,6 +2423,9 @@ async function renderPage(){
 
   // Re-apply clean class
   pgEl.classList.toggle('clean',S.clean);
+  // Todo pages: disable ink canvas pointer events so taps reach checkboxes
+  const inkCv=document.getElementById('ink-canvas');
+  if(inkCv)inkCv.style.pointerEvents=(tpl==='todo')?'none':'auto';
 
   // Hide old calibrate button — no longer needed
   const calBtn=document.getElementById('cal-btn-tog');
@@ -2435,7 +2443,7 @@ async function renderPage(){
     if(!pgBody){
       pgBody=document.createElement('div');
       pgBody.id='pg-body-todo';
-      pgBody.style.cssText='position:absolute;inset:0;padding:42px 18px 14px;z-index:4;overflow-y:auto;background:transparent';
+      pgBody.style.cssText='position:absolute;inset:0;padding:42px 18px 14px;z-index:6;overflow-y:auto;background:transparent';
       document.getElementById('the-page').appendChild(pgBody);
     }
     pgBody.style.display='block';
