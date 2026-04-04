@@ -911,7 +911,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 .ink-mode #plain-textarea{pointer-events:none;}
 .ink-mode #writing-layer{pointer-events:none;}
 /* Push page content up so ink toolbar doesn't cover it */
-.ink-mode .page-reader{padding-bottom:90px;}
+.ink-mode .page-reader{padding-bottom:var(--ink-toolbar-h,110px);}
 
 /* Mode toggle pill — floats above flip row */
 #ink-mode-toggle{
@@ -5314,17 +5314,27 @@ function setInkMode(mode){
 
   if(mode==='draw'){
     page?.classList.add('ink-mode');
+    document.body.classList.add('ink-mode');
     toolbar?.classList.add('show');
     btnType?.classList.remove('active');
     btnDraw?.classList.add('active');
     if(drawTbb)drawTbb.style.background='rgba(201,168,76,.18)';
     resizeInkCanvas();
     loadInkPage();
-    // Prevent page scroll while drawing
     document.body.style.overflow='hidden';
+    // Measure actual toolbar height and pad page-reader so toolbar never covers content
+    requestAnimationFrame(()=>{
+      const tb=document.getElementById('ink-toolbar');
+      const pr=document.querySelector('.page-reader');
+      if(tb&&pr){
+        const h=tb.offsetHeight+56; // +56 for flip-row height
+        pr.style.paddingBottom=h+'px';
+      }
+    });
     toast('✏️ Draw mode — use your stylus or finger','info');
   }else{
     page?.classList.remove('ink-mode');
+    document.body.classList.remove('ink-mode');
     toolbar?.classList.remove('show');
     btnType?.classList.add('active');
     btnDraw?.classList.remove('active');
@@ -5333,6 +5343,9 @@ function setInkMode(mode){
     INK.eraserWidth=null;
     document.querySelectorAll('.ink-eraser-sz').forEach(b=>b.classList.remove('active'));
     document.body.style.overflow='';
+    // Reset page-reader padding
+    const pr=document.querySelector('.page-reader');
+    if(pr)pr.style.paddingBottom='';
     toast('⌨️ Type mode','info');
   }
 }
