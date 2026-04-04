@@ -3502,12 +3502,39 @@ async function fbSyncNow(){
 async function fbPush(){
   if(!fbUser||!fbDb||!fbConfigured)return;
   try{
-    const {doc,setDoc}=window._fbModules;
+    const {doc,setDoc,ref,uploadString,getDownloadURL}=window._fbModules;
     const uid=fbUser.uid;
-    // Store notebooks, quickNotes, folders, collections metadata (no full PDF data)
+
+    // Process notebooks — upload base64 artPack images to Storage, store URLs
+    const notebooksForSync = await Promise.all(S.notebooks.map(async nb=>{
+      if(!nb.artPack||!nb.artPack.length) return nb;
+      // Upload each image that is still base64 (not already a Storage URL)
+      const uploadedUrls = await Promise.all(nb.artPack.map(async (img, idx)=>{
+        if(!img||!img.startsWith('data:')) return img; // already a URL
+        try{
+          const storageRef=ref(fbStorage,`users/${uid}/artpacks/${nb.id}_${idx}.jpg`);
+          const snap=await uploadString(storageRef,img,'data_url');
+          const url=await getDownloadURL(snap.ref);
+          // Also update in-memory so subsequent saves use URL not base64
+          nb.artPack[idx]=url;
+          // Update localStorage key too
+          try{
+            const pack=JSON.parse(localStorage.getItem('ai_ap_'+nb.id)||'[]');
+            pack[idx]=url;
+            localStorage.setItem('ai_ap_'+nb.id,JSON.stringify(pack));
+          }catch(e){}
+          return url;
+        }catch(e){
+          console.warn('Art upload failed for',nb.id,idx,e.message);
+          return null; // skip failed uploads
+        }
+      }));
+      return {...nb, artPack:uploadedUrls.filter(Boolean)};
+    }));
+
     const colMeta=S.collections.map(c=>({id:c.id,name:c.name,pageCount:c.pages.length}));
     await setDoc(doc(fbDb,'users',uid,'data','main'),{
-      notebooks:S.notebooks,
+      notebooks:notebooksForSync,
       quickNotes:S.quickNotes,
       folders:S.folders,
       collectionsMeta:colMeta,
