@@ -2160,11 +2160,28 @@ function closeSidebar(){
 /* ═══════ STORAGE ═══════ */
 function save(){
   try{
-    localStorage.setItem('ai_nb',JSON.stringify(S.notebooks));
+    // Strip artPacks out of notebooks before saving to avoid localStorage overflow
+    // artPacks are saved separately under ai_artpacks
+    const artPacks={};
+    const notebooksSlim=S.notebooks.map(nb=>{
+      if(nb.artPack&&nb.artPack.length){
+        artPacks[nb.id]=nb.artPack;
+        return {...nb,artPack:[]};  // store empty array in main key
+      }
+      return nb;
+    });
+    localStorage.setItem('ai_nb',JSON.stringify(notebooksSlim));
     localStorage.setItem('ai_qn',JSON.stringify(S.quickNotes));
     localStorage.setItem('ai_folders',JSON.stringify(S.folders));
     try{localStorage.setItem('ai_col',JSON.stringify(S.collections));}catch(e){}
-  }catch(e){}
+    // Save artPacks separately — each notebook's images in its own key
+    Object.entries(artPacks).forEach(([nbId,pack])=>{
+      try{localStorage.setItem('ai_ap_'+nbId,JSON.stringify(pack));}catch(e){
+        console.warn('artPack too large for localStorage, try signing in to sync');
+        toast('Image too large — sign in to save artwork across devices','info');
+      }
+    });
+  }catch(e){console.warn('save error:',e);}
   // NOTE: Firebase sync is triggered separately via fbSyncDebounced()
   // NOT here — to avoid save() loops
 }
@@ -2177,6 +2194,13 @@ function load(){
     if(c)S.collections=JSON.parse(c);
     // Load saved folders, or fall back to defaults
     S.folders=d?JSON.parse(d):JSON.parse(JSON.stringify(DEFAULT_FOLDERS));
+    // Restore artPacks from their separate storage keys
+    S.notebooks.forEach(nb=>{
+      try{
+        const pack=localStorage.getItem('ai_ap_'+nb.id);
+        if(pack)nb.artPack=JSON.parse(pack);
+      }catch(e){}
+    });
   }catch(e){
     S.folders=JSON.parse(JSON.stringify(DEFAULT_FOLDERS));
   }
@@ -5432,11 +5456,28 @@ async function uploadImageToStorage(dataURL, imageId){
 /* ── Upload a File object directly ── */
 async function uploadFileToStorage(file, imageId){
   if(!fbStorage||!fbUser){
-    // Not signed in — convert to dataURL and store locally
+    // Not signed in — compress image then store as dataURL locally
     return new Promise(resolve=>{
-      const reader=new FileReader();
-      reader.onload=ev=>resolve(ev.target.result);
-      reader.readAsDataURL(file);
+      const img=new Image();
+      const url=URL.createObjectURL(file);
+      img.onload=()=>{
+        URL.revokeObjectURL(url);
+        const canvas=document.createElement('canvas');
+        // Scale down to max 800px wide to save localStorage space
+        const maxW=800;
+        const scale=img.width>maxW?maxW/img.width:1;
+        canvas.width=Math.round(img.width*scale);
+        canvas.height=Math.round(img.height*scale);
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg',0.7));
+      };
+      img.onerror=()=>{
+        // If image load fails, fall back to original
+        const reader=new FileReader();
+        reader.onload=ev=>resolve(ev.target.result);
+        reader.readAsDataURL(file);
+      };
+      img.src=url;
     });
   }
   try{
