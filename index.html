@@ -1424,6 +1424,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <button class="tbb" onclick="addPage()" title="Add new page"><span class="tbb-ico">＋</span><span class="tbb-lbl">Page</span></button>
         <button class="tbb" onclick="deletePage()" title="Delete current page"><span class="tbb-ico">🗑</span><span class="tbb-lbl">Delete</span></button>
         <button class="tbb" onclick="openExport()" title="Export to PDF"><span class="tbb-ico">📤</span><span class="tbb-lbl">Export</span></button>
+        <button class="tbb" id="email-todo-btn" onclick="emailTodoList()" title="Email this To-Do list" style="display:none"><span class="tbb-ico">📧</span><span class="tbb-lbl">Email</span></button>
         <button class="tbb" id="cal-btn-tog" onclick="toggleCalibration()" title="Align text to PDF lines" style="display:none"><span class="tbb-ico">📐</span><span class="tbb-lbl">Align</span></button>
       </div>
 
@@ -2844,11 +2845,14 @@ function openNB(nb){
   // Hide/show template bar chips based on notebook type
   const tplBar=document.getElementById('tpl-bar');
   const inkToggle=document.getElementById('ink-mode-toggle');
+  const emailBtn=document.getElementById('email-todo-btn');
   if(isTodoNB){
     // Lock to todo — hide template switcher AND ink toggle entirely
     if(tplBar)tplBar.style.display='none';
     if(inkToggle)inkToggle.classList.remove('show');
+    if(emailBtn)emailBtn.style.display='';
   }else{
+    if(emailBtn)emailBtn.style.display='none';
     if(tplBar)tplBar.style.display='';
     // template chips — scope to tpl-bar only, never touch modal chips
     document.querySelectorAll('#tpl-bar .tpl-chip').forEach(c=>{
@@ -3322,6 +3326,58 @@ function closeNBMenu(){
   if(m)m.remove();
   _nbMenuOpen=null;
 }
+/* ── Email Todo List ── */
+function emailTodoList(){
+  const nb=S.nb;
+  if(!nb){toast('Open a To-Do notebook first','info');return;}
+
+  // Gather all tasks across all pages
+  const allTasks=[];
+  nb.pages.forEach((page, pageIdx)=>{
+    const lines=(page||'').split('\n').filter(l=>l.trim());
+    lines.forEach(ln=>{
+      const {done,txt,due}=parseTodoLine(ln);
+      if(txt)allTasks.push({done,txt,due,page:pageIdx+1});
+    });
+  });
+
+  if(!allTasks.length){
+    toast('No tasks to email','info');
+    return;
+  }
+
+  // Separate pending and done
+  const pending=allTasks.filter(t=>!t.done);
+  const done=allTasks.filter(t=>t.done);
+
+  // Build email body
+  const today=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  let body=`${nb.title}\n`;
+  body+=`Sent from AureliaInk — ${today}\n`;
+  body+=`${'─'.repeat(40)}\n\n`;
+
+  if(pending.length){
+    body+=`PENDING (${pending.length})\n`;
+    pending.forEach(t=>{
+      body+=`☐ ${t.txt}`;
+      if(t.due)body+=` — Due: ${t.due}`;
+      body+=`\n`;
+    });
+  }
+
+  if(done.length){
+    body+=`\nCOMPLETED (${done.length})\n`;
+    done.forEach(t=>{
+      body+=`✓ ${t.txt}\n`;
+    });
+  }
+
+  const subject=encodeURIComponent(`${nb.title} — ${today}`);
+  const encodedBody=encodeURIComponent(body);
+  window.location.href=`mailto:?subject=${subject}&body=${encodedBody}`;
+  toast('Opening email app… ✦','ok');
+}
+
 function deleteNB(nb){
   if(!nb)return;
   if(!confirm(`Delete "${nb.title}"? This cannot be undone.`))return;
