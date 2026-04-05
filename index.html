@@ -491,7 +491,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 /* ══════════════════════════════════
    NOTEBOOK VIEW — SINGLE PAGE
 ══════════════════════════════════ */
-#nb-view{flex:1;min-height:0;display:none;flex-direction:column;overflow:visible}
+#nb-view{flex:1;min-height:0;display:none;flex-direction:column;overflow:hidden}
 #nb-view.active{display:flex}
 
 /* Notebook toolbar */
@@ -944,14 +944,14 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   flex-shrink:0;
   width:100%;
   box-sizing:border-box;
+  position:relative;
+  overflow:hidden;
 }
 #ink-toolbar.show{
   display:flex;
 }
 #ink-toolbar.show{
   display:flex;
-  opacity:1;
-  transform:translateX(-50%) translateY(0);
 }
 .ink-toolbar-row{
   display:flex;
@@ -965,6 +965,8 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   scrollbar-width:none;
   padding:4px 8px;
   min-height:32px;
+  width:100%;
+  box-sizing:border-box;
 }
 .ink-toolbar-row::-webkit-scrollbar{display:none;}
 /* Ensure all ink toolbar buttons are visible */
