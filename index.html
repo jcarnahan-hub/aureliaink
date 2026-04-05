@@ -962,9 +962,32 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
-  padding:0 12px;
+  padding:4px 12px;
 }
 .ink-toolbar-row::-webkit-scrollbar{display:none;}
+/* Ensure all ink toolbar buttons are visible */
+.ink-toolbar-row button{color:var(--cream) !important;}
+.ink-width,.ink-style,.ink-action{
+  color:rgba(253,246,232,.85) !important;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(201,168,76,.2);
+  border-radius:8px;
+  padding:5px 10px;
+  font-size:12px;
+  cursor:pointer;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.ink-width.active,.ink-style.active{
+  background:rgba(201,168,76,.2) !important;
+  color:var(--gold) !important;
+  border-color:var(--gold) !important;
+}
+.ink-eraser-sz.active{
+  background:rgba(44,160,140,.2) !important;
+  color:#3fcfbc !important;
+  border-color:#3fcfbc !important;
+}
 .ink-tool-sep{
   width:1px;height:24px;
   background:rgba(201,168,76,.2);
