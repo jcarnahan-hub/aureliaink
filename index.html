@@ -1401,6 +1401,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <div class="nb-nb-title" id="nb-ttl">—</div>
         <button class="tbb" id="view-artwork-btn" onclick="setArtworkView()" title="Artwork view"><span class="tbb-ico">🖼</span><span class="tbb-lbl">Artwork</span></button><button class="tbb" id="view-clean-btn" onclick="setCleanView()" title="Clean/focus view"><span class="tbb-ico">📄</span><span class="tbb-lbl">Clean</span></button>
         <button class="tbb" id="art-btn" onclick="openArtPicker()" title="Set page artwork"><span class="tbb-ico">🎨</span><span class="tbb-lbl">Artwork</span></button>
+        <button class="tbb" id="type-mode-tbb" onclick="setInkMode('type')" title="Type mode"><span class="tbb-ico">✏️</span><span class="tbb-lbl">Type</span></button>
         <button class="tbb" id="draw-mode-tbb" onclick="setInkMode('draw')" title="Draw with stylus"><span class="tbb-ico">🖊</span><span class="tbb-lbl">Draw</span></button>
         <button class="tbb" onclick="addPage()" title="Add new page"><span class="tbb-ico">＋</span><span class="tbb-lbl">Page</span></button>
         <button class="tbb" onclick="deletePage()" title="Delete current page"><span class="tbb-ico">🗑</span><span class="tbb-lbl">Delete</span></button>
@@ -5296,6 +5297,7 @@ function setInkMode(mode){
   const btnDraw=document.getElementById('btn-draw-mode');
   const drawTbb=document.getElementById('draw-mode-tbb');
 
+  const typeTbb=document.getElementById('type-mode-tbb');
   if(mode==='draw'){
     page?.classList.add('ink-mode');
     document.body.classList.add('ink-mode');
@@ -5303,6 +5305,7 @@ function setInkMode(mode){
     btnType?.classList.remove('active');
     btnDraw?.classList.add('active');
     if(drawTbb)drawTbb.style.background='rgba(201,168,76,.18)';
+    if(typeTbb)typeTbb.style.background='';
     resizeInkCanvas();
     loadInkPage();
     document.body.style.overflow='hidden';
@@ -5315,6 +5318,7 @@ function setInkMode(mode){
     btnType?.classList.add('active');
     btnDraw?.classList.remove('active');
     if(drawTbb)drawTbb.style.background='';
+    if(typeTbb)typeTbb.style.background='rgba(201,168,76,.18)';
     INK.eraser=false;
     INK.eraserWidth=null;
     document.querySelectorAll('.ink-eraser-sz').forEach(b=>b.classList.remove('active'));
