@@ -958,14 +958,14 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   background:rgba(12,9,4,.95);
   border:1px solid rgba(201,168,76,.25);
   border-radius:20px;
-  padding:8px 10px;
+  padding:8px 12px;
   gap:4px;
-  align-items:stretch;
+  align-items:center;
   box-shadow:0 6px 28px rgba(0,0,0,.6);
   backdrop-filter:blur(16px);
   flex-direction:column;
-  max-width:calc(100vw - 16px);
-  width:calc(100vw - 16px);
+  max-width:calc(100vw - 24px);
+  width:auto;
 }
 #ink-toolbar.show{
   display:flex;
@@ -979,7 +979,12 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   gap:4px;
   justify-content:center;
   flex-wrap:nowrap;
+  overflow-x:auto;
+  max-width:calc(100vw - 48px);
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
 }
+.ink-toolbar-row::-webkit-scrollbar{display:none;}
 .ink-tool-sep{
   width:1px;height:24px;
   background:rgba(201,168,76,.2);
@@ -5322,19 +5327,21 @@ function setInkMode(mode){
     resizeInkCanvas();
     loadInkPage();
     document.body.style.overflow='hidden';
-    // Measure actual toolbar height and shrink page-reader to fit above it
+    // Measure actual toolbar height and position it to sit flush against page
     requestAnimationFrame(()=>{
       const tb=document.getElementById('ink-toolbar');
       const pr=document.querySelector('.page-reader');
-      const flipRow=document.querySelector('.flip-row');
-      if(tb&&pr){
+      const nbView=document.getElementById('nb-view');
+      if(tb&&pr&&nbView){
         const tbH=tb.offsetHeight;
+        const flipRow=document.querySelector('.flip-row');
         const flipH=flipRow?flipRow.offsetHeight:48;
-        const safeB=parseInt(getComputedStyle(document.documentElement)
-          .getPropertyValue('--safe-bottom')||'0');
-        // Set explicit height so page fills exactly the space above toolbar
-        pr.style.height=`calc(100% - ${tbH+flipH+safeB}px)`;
-        pr.style.paddingBottom='0';
+        // Position toolbar flush above the flip row
+        tb.style.bottom=(flipH+4)+'px';
+        tb.style.transform='translateX(-50%)';
+        // Set page-reader margin so page ends where toolbar starts
+        pr.style.marginBottom=(tbH+8)+'px';
+        pr.style.height='';
       }
     });
     toast('✏️ Draw mode — use your stylus or finger','info');
@@ -5351,7 +5358,9 @@ function setInkMode(mode){
     document.body.style.overflow='';
     // Reset page-reader to natural size
     const pr=document.querySelector('.page-reader');
-    if(pr){pr.style.height='';pr.style.paddingBottom='';}
+    const tb=document.getElementById('ink-toolbar');
+    if(pr){pr.style.height='';pr.style.paddingBottom='';pr.style.marginBottom='';}
+    if(tb){tb.style.bottom='';tb.style.transform='';}
     toast('⌨️ Type mode','info');
   }
 }
