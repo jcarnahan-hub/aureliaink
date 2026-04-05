@@ -937,10 +937,10 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 #ink-toolbar{
   display:none;
   flex-direction:column;
-  gap:4px;
-  padding:8px 0;
+  gap:2px;
+  padding:4px 0;
   background:rgba(12,9,4,.95);
-  border-top:1px solid rgba(201,168,76,.25);
+  border-bottom:1px solid rgba(201,168,76,.2);
   flex-shrink:0;
   width:100%;
 }
@@ -957,12 +957,12 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   flex-direction:row;
   align-items:center;
   gap:5px;
-  justify-content:flex-start;
+  justify-content:center;
   flex-wrap:nowrap;
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
-  padding:4px 12px;
+  padding:2px 8px;
 }
 .ink-toolbar-row::-webkit-scrollbar{display:none;}
 /* Ensure all ink toolbar buttons are visible */
@@ -971,9 +971,9 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   color:rgba(253,246,232,.85) !important;
   background:rgba(255,255,255,.06);
   border:1px solid rgba(201,168,76,.2);
-  border-radius:8px;
-  padding:5px 10px;
-  font-size:12px;
+  border-radius:6px;
+  padding:3px 8px;
+  font-size:11px;
   cursor:pointer;
   white-space:nowrap;
   flex-shrink:0;
@@ -995,7 +995,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 }
 /* Color swatches */
 .ink-color{
-  width:22px;height:22px;
+  width:18px;height:18px;
   border-radius:50%;
   border:2px solid transparent;
   cursor:pointer;
