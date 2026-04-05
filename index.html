@@ -491,7 +491,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 /* ══════════════════════════════════
    NOTEBOOK VIEW — SINGLE PAGE
 ══════════════════════════════════ */
-#nb-view{flex:1;display:none;flex-direction:column;overflow:hidden}
+#nb-view{flex:1;min-height:0;display:none;flex-direction:column;overflow:hidden}
 #nb-view.active{display:flex}
 
 /* Notebook toolbar */
@@ -537,7 +537,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 .tpl-sep{width:1px;height:15px;background:rgba(201,168,76,.15);flex-shrink:0;margin:0 2px}
 
 /* ── SINGLE PAGE ── */
-.page-reader{flex:1;display:flex;align-items:stretch;justify-content:center;
+.page-reader{flex:1;min-height:0;display:flex;align-items:stretch;justify-content:center;
   padding:0;overflow:hidden;
   background:radial-gradient(ellipse at center,#1a1206 0%,#070503 100%)}
 /* Tablet: page fills all space beside sidebar, no centering constraint */
@@ -550,7 +550,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 /* The one page */
 .the-page{
   position:relative;overflow:hidden;
-  width:100%;height:100%;
+  width:100%;height:100%;min-height:0;
   /* No max-width — use full available width */
   /* No border-radius on phones — every pixel counts */
   border-radius:0;
