@@ -5358,7 +5358,7 @@ function showInkToggle(){
 }
 function hideInkToggle(){
   document.getElementById('ink-mode-toggle')?.classList.remove('show');
-  document.getElementById('ink-toolbar')?.classList.remove('show');
+  // Don't touch ink-toolbar here — setInkMode controls its visibility
   if(INK.mode==='draw')setInkMode('type');
 }
 
