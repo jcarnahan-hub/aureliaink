@@ -491,7 +491,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 /* ══════════════════════════════════
    NOTEBOOK VIEW — SINGLE PAGE
 ══════════════════════════════════ */
-#nb-view{flex:1;min-height:0;display:none;flex-direction:column;overflow:hidden}
+#nb-view{flex:1;min-height:0;display:none;flex-direction:column;overflow:visible}
 #nb-view.active{display:flex}
 
 /* Notebook toolbar */
@@ -963,8 +963,8 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
-  padding:2px 8px;
-  /* No mask — colors must be fully visible */
+  padding:4px 8px;
+  min-height:32px;
 }
 .ink-toolbar-row::-webkit-scrollbar{display:none;}
 /* Ensure all ink toolbar buttons are visible */
