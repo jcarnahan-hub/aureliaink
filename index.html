@@ -913,21 +913,9 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 /* Push page content up so ink toolbar doesn't cover it */
 /* ink-mode page-reader height set dynamically via JS */
 
-/* Mode toggle pill — floats above flip row */
-#ink-mode-toggle{
-  position:fixed;
-  bottom:calc(var(--flip-h) + 8px + var(--safe-bottom));
-  right:12px;
-  z-index:60;
-  display:none;
-  background:rgba(17,16,9,.92);
-  border:1px solid rgba(201,168,76,.3);
-  border-radius:24px;
-  overflow:hidden;
-  box-shadow:0 4px 18px rgba(0,0,0,.5);
-  backdrop-filter:blur(12px);
-}
-#ink-mode-toggle.show{display:flex;}
+/* Mode toggle — now in nb-bar, not floating */
+#ink-mode-toggle{display:none;}
+#ink-mode-toggle.show{display:none;}
 .ink-mode-btn{
   padding:8px 14px;
   background:transparent;
@@ -954,6 +942,10 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   background:rgba(12,9,4,.95);
   border-top:1px solid rgba(201,168,76,.25);
   flex-shrink:0;
+  width:100%;
+}
+#ink-toolbar.show{
+  display:flex;
 }
 #ink-toolbar.show{
   display:flex;
@@ -1121,11 +1113,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 #float-back:active{transform:scale(.94);}
 #float-back.show{display:flex;}
 /* In draw mode, move back button to top so it doesn't clash with ink toolbar */
-.ink-mode #float-back.show{
-  bottom:auto;
-  top:calc(var(--topbar-h,56px) + 8px);
-  left:14px;
-}
+/* float-back stays at normal position in draw mode */
 
 /* ── TASK BADGE on notebook card ── */
 .nb-task-badge{
@@ -5318,21 +5306,7 @@ function setInkMode(mode){
     resizeInkCanvas();
     loadInkPage();
     document.body.style.overflow='hidden';
-    // Measure actual toolbar height and position it to sit flush against page
-    requestAnimationFrame(()=>{
-      const tb=document.getElementById('ink-toolbar');
-      const pr=document.querySelector('.page-reader');
-      const nbView=document.getElementById('nb-view');
-      if(tb&&pr&&nbView){
-        const tbH=tb.offsetHeight;
-        const flipRow=document.querySelector('.flip-row');
-        const flipH=flipRow?flipRow.offsetHeight:48;
-        // Position toolbar flush above the flip row
-        // Toolbar is now in-flow — no manual positioning needed
-        pr.style.marginBottom='';
-        pr.style.height='';
-      }
-    });
+    // Toolbar is in-flow — no manual positioning needed
     toast('✏️ Draw mode — use your stylus or finger','info');
   }else{
     page?.classList.remove('ink-mode');
