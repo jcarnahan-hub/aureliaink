@@ -1422,6 +1422,37 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <div id="pdf-chips"></div>
       </div>
 
+      <!-- INK TOOLBAR — sits above page, below template bar -->
+      <div id="ink-toolbar">
+        <div class="ink-toolbar-row">
+          <div class="ink-color active" data-color="#1a1206" style="background:#1a1206" title="Black" onclick="setInkColor('#1a1206',this)"></div>
+          <div class="ink-color" data-color="#1a3a6e" style="background:#1a3a6e" title="Blue" onclick="setInkColor('#1a3a6e',this)"></div>
+          <div class="ink-color" data-color="#8b1a1a" style="background:#8b1a1a" title="Red" onclick="setInkColor('#8b1a1a',this)"></div>
+          <div class="ink-color" data-color="#c9a84c" style="background:#c9a84c" title="Gold" onclick="setInkColor('#c9a84c',this)"></div>
+          <div class="ink-color" data-color="#2d6a4f" style="background:#2d6a4f" title="Green" onclick="setInkColor('#2d6a4f',this)"></div>
+          <div class="ink-color" data-color="#4a1a6e" style="background:#4a1a6e" title="Purple" onclick="setInkColor('#4a1a6e',this)"></div>
+          <div class="ink-tool-sep"></div>
+          <button class="ink-action ink-eraser-sz" id="ink-eraser-s" onclick="setEraser(3,this)" title="Small eraser">🧹S</button>
+          <button class="ink-action ink-eraser-sz" id="ink-eraser-m" onclick="setEraser(8,this)" title="Medium eraser">🧹M</button>
+          <button class="ink-action ink-eraser-sz" id="ink-eraser-l" onclick="setEraser(16,this)" title="Large eraser">🧹L</button>
+          <div class="ink-tool-sep"></div>
+          <button class="ink-action" onclick="inkUndo()" title="Undo">↩</button>
+          <button class="ink-action" onclick="inkRedo()" title="Redo">↪</button>
+          <button class="ink-action" onclick="clearInkPage()" title="Clear page" style="color:rgba(212,132,122,.7)">🗑</button>
+        </div>
+        <div class="ink-toolbar-row">
+          <button class="ink-width" data-w="1.5" onclick="setInkWidth(1.5,this)">Fine</button>
+          <button class="ink-width active" data-w="3" onclick="setInkWidth(3,this)">Med</button>
+          <button class="ink-width" data-w="6" onclick="setInkWidth(6,this)">Thick</button>
+          <div class="ink-tool-sep"></div>
+          <button class="ink-style active" data-style="ballpoint" onclick="setInkStyle('ballpoint',this)">Pen</button>
+          <button class="ink-style" data-style="marker" onclick="setInkStyle('marker',this)">Marker</button>
+          <button class="ink-style" data-style="brush" onclick="setInkStyle('brush',this)">Brush</button>
+          <button class="ink-style" data-style="pencil" onclick="setInkStyle('pencil',this)">Pencil</button>
+          <button class="ink-style" data-style="highlight" onclick="setInkStyle('highlight',this)">Hi-lite</button>
+        </div>
+      </div>
+
       <!-- SINGLE PAGE READER -->
       <div class="page-reader" style="position:relative">
       <!-- Floating toolbar-peek button -->
@@ -1475,39 +1506,6 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
           <div class="next-page-hint" id="next-page-hint">↩ Continue on next page</div>
         </div>
       </div><!-- /page-reader -->
-
-      <!-- INK TOOLBAR — in-flow between page and flip row, no fixed positioning -->
-      <div id="ink-toolbar">
-        <!-- Row 1: Colors + Eraser sizes -->
-        <div class="ink-toolbar-row">
-          <div class="ink-color active" data-color="#1a1206" style="background:#1a1206" title="Black" onclick="setInkColor('#1a1206',this)"></div>
-          <div class="ink-color" data-color="#1a3a6e" style="background:#1a3a6e" title="Blue" onclick="setInkColor('#1a3a6e',this)"></div>
-          <div class="ink-color" data-color="#8b1a1a" style="background:#8b1a1a" title="Red" onclick="setInkColor('#8b1a1a',this)"></div>
-          <div class="ink-color" data-color="#c9a84c" style="background:#c9a84c" title="Gold" onclick="setInkColor('#c9a84c',this)"></div>
-          <div class="ink-color" data-color="#2d6a4f" style="background:#2d6a4f" title="Green" onclick="setInkColor('#2d6a4f',this)"></div>
-          <div class="ink-color" data-color="#4a1a6e" style="background:#4a1a6e" title="Purple" onclick="setInkColor('#4a1a6e',this)"></div>
-          <div class="ink-tool-sep"></div>
-          <button class="ink-action ink-eraser-sz" id="ink-eraser-s" onclick="setEraser(3,this)" title="Small eraser">🧹S</button>
-          <button class="ink-action ink-eraser-sz" id="ink-eraser-m" onclick="setEraser(8,this)" title="Medium eraser">🧹M</button>
-          <button class="ink-action ink-eraser-sz" id="ink-eraser-l" onclick="setEraser(16,this)" title="Large eraser">🧹L</button>
-          <div class="ink-tool-sep"></div>
-          <button class="ink-action" onclick="inkUndo()" title="Undo">↩</button>
-          <button class="ink-action" onclick="inkRedo()" title="Redo">↪</button>
-          <button class="ink-action" onclick="clearInkPage()" title="Clear page" style="color:rgba(212,132,122,.7)">🗑</button>
-        </div>
-        <!-- Row 2: Widths + Styles -->
-        <div class="ink-toolbar-row">
-          <button class="ink-width" data-w="1.5" onclick="setInkWidth(1.5,this)">Fine</button>
-          <button class="ink-width active" data-w="3" onclick="setInkWidth(3,this)">Med</button>
-          <button class="ink-width" data-w="6" onclick="setInkWidth(6,this)">Thick</button>
-          <div class="ink-tool-sep"></div>
-          <button class="ink-style active" data-style="ballpoint" onclick="setInkStyle('ballpoint',this)">Pen</button>
-          <button class="ink-style" data-style="marker" onclick="setInkStyle('marker',this)">Marker</button>
-          <button class="ink-style" data-style="brush" onclick="setInkStyle('brush',this)">Brush</button>
-          <button class="ink-style" data-style="pencil" onclick="setInkStyle('pencil',this)">Pencil</button>
-          <button class="ink-style" data-style="highlight" onclick="setInkStyle('highlight',this)">Hi-lite</button>
-        </div>
-      </div>
 
       <!-- Flip controls -->
       <div class="flip-row">
