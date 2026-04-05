@@ -939,10 +939,11 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   flex-direction:column;
   gap:2px;
   padding:4px 0;
-  background:rgba(12,9,4,.95);
+  background:rgba(17,12,6,.98);
   border-bottom:1px solid rgba(201,168,76,.2);
   flex-shrink:0;
   width:100%;
+  box-sizing:border-box;
 }
 #ink-toolbar.show{
   display:flex;
@@ -957,12 +958,13 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   flex-direction:row;
   align-items:center;
   gap:5px;
-  justify-content:center;
+  justify-content:flex-start;
   flex-wrap:nowrap;
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
   padding:2px 8px;
+  /* No mask — colors must be fully visible */
 }
 .ink-toolbar-row::-webkit-scrollbar{display:none;}
 /* Ensure all ink toolbar buttons are visible */
