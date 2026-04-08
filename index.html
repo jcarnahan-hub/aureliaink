@@ -1410,7 +1410,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <button class="nb-back" onclick="closeNB()">← Back</button>
         <div class="nb-nb-title" id="nb-ttl">—</div>
         <button class="tbb" id="view-artwork-btn" onclick="setArtworkView()" title="Artwork view"><span class="tbb-ico">🖼</span><span class="tbb-lbl">Artwork</span></button><button class="tbb" id="view-clean-btn" onclick="setCleanView()" title="Clean/focus view"><span class="tbb-ico">📄</span><span class="tbb-lbl">Clean</span></button>
-        <button class="tbb" id="art-btn" onclick="openArtPicker()" title="Set page artwork"><span class="tbb-ico">🎨</span><span class="tbb-lbl">Artwork</span></button>
+        <button class="tbb" id="art-btn" onclick="openArtPickerOrLibrary()" title="Set page artwork"><span class="tbb-ico">🎨</span><span class="tbb-lbl">Artwork</span></button>
         <button class="tbb" id="type-mode-tbb" onclick="setInkMode('type')" title="Type mode"><span class="tbb-ico">✏️</span><span class="tbb-lbl">Type</span></button>
         <button class="tbb" id="draw-mode-tbb" onclick="setInkMode('draw')" title="Draw with stylus"><span class="tbb-ico">🖊</span><span class="tbb-lbl">Draw</span></button>
         <button class="tbb" onclick="addPage()" title="Add new page"><span class="tbb-ico">＋</span><span class="tbb-lbl">Page</span></button>
@@ -5258,7 +5258,28 @@ function renderLibSelectedPreview(){
 }
 
 function applyLibSelection(){
-  if(!S.nb){toast('Open a notebook first','info');return;}
+  if(!S.nb){
+    // No notebook open — show a picker to choose which notebook to apply to
+    const nbs=S.notebooks.filter(n=>n.tpl!=='pdf');
+    if(!nbs.length){toast('Create a notebook first','info');return;}
+    const opts=nbs.map((n,i)=>`${i+1}. ${n.emoji?n.emoji+' ':''}${n.title}`).join('\n');
+    const choice=prompt(`Which notebook?\n\n${opts}\n\nEnter number:`);
+    if(!choice)return;
+    const idx=parseInt(choice)-1;
+    if(isNaN(idx)||idx<0||idx>=nbs.length){toast('Invalid choice','info');return;}
+    const nb=nbs[idx];
+    if(!libSelectedIds.size){toast('Select at least one image','info');return;}
+    const selected=S.artLibrary.images.filter(img=>libSelectedIds.has(img.id));
+    nb.artPack=selected.map(img=>img.dataURL);
+    nb.artTpl=pendingArtTpl||'lined';
+    nb.artRot=pendingArtRot||'cycle';
+    if(nb.tpl!=='todo'){nb.tpl=nb.artTpl;}
+    save();
+    closeM('m-library');
+    renderShelf(S.folder==='all'?null:S.folder);
+    toast(`${selected.length} image${selected.length!==1?'s':''} applied to "${nb.title}" ✦`,'ok');
+    return;
+  }
   if(!libSelectedIds.size){toast('Select at least one image','info');return;}
   const selected=S.artLibrary.images.filter(img=>libSelectedIds.has(img.id));
   S.nb.artPack=selected.map(img=>img.dataURL);
@@ -5303,12 +5324,14 @@ function renderLibrarySidebar(){
 /* ── Update openArtPicker to also show library option ── */
 const _origOpenArtPicker=openArtPicker;
 function openArtPickerOrLibrary(){
-  // If library has images, offer choice
   if(S.artLibrary&&S.artLibrary.images.length){
+    // Has library images — open library on Apply tab if inside a notebook
     openLibrary();
-    // Switch directly to apply tab
-    setTimeout(()=>switchLibTab('apply',document.getElementById('lib-tab-apply')),100);
+    if(S.nb){
+      setTimeout(()=>switchLibTab('apply',document.getElementById('lib-tab-apply')),100);
+    }
   }else{
+    // No library images — open the direct file upload picker
     _origOpenArtPicker();
   }
 }
