@@ -2166,6 +2166,27 @@ function init(){
   renderFolders();renderShelf();renderQNList();updateCounts();renderColSb();rebuildFolderSelect();
   installPWA();
   fbInit();
+  // Restore last open notebook after a short delay (lets Firebase init first)
+  setTimeout(()=>{
+    try{
+      const session=localStorage.getItem('ai_session');
+      if(session){
+        const {nbId,pg}=JSON.parse(session);
+        const nb=S.notebooks.find(n=>n.id===nbId);
+        if(nb){
+          openNB(nb);
+          closeSidebar();
+          // Restore page number after renderPage runs
+          setTimeout(()=>{
+            if(S.nb&&pg>0&&pg<S.nb.pages.length){
+              S.pg=pg;
+              renderPage();
+            }
+          },200);
+        }
+      }
+    }catch(e){}
+  },800);
   setTimeout(()=>{
     const ld=document.getElementById('loading');
     if(ld){
@@ -2827,6 +2848,8 @@ function rebuildFolderSelect(){
 /* ═══════ OPEN / CLOSE ═══════ */
 function openNB(nb){
   S.nb=nb;S.pg=0;S.tpl=nb.tpl||'lined';S.clean=false;
+  // Save session so app reopens to this notebook
+  try{localStorage.setItem('ai_session',JSON.stringify({nbId:nb.id,pg:0}));}catch(e){}
   document.getElementById('view-artwork-btn')?.classList.remove('on');
   document.getElementById('view-clean-btn')?.classList.remove('on');
   document.getElementById('shelf').style.display='none';
@@ -2910,6 +2933,7 @@ function toggleToolbars(){
 }
 function closeNB(){
   autoSave();stopAuto();S.clean=false;
+  try{localStorage.removeItem('ai_session');}catch(e){}
   // Restore toolbars for shelf view
   document.getElementById('nb-bar')?.classList.remove('collapsed');
   document.getElementById('tpl-bar')?.classList.remove('collapsed');
@@ -4248,6 +4272,8 @@ window.flipWithAnim=function(dir){
   }
   if(nxt<0)return;
   S.pg=nxt;
+  // Update session page
+  try{if(S.nb)localStorage.setItem('ai_session',JSON.stringify({nbId:S.nb.id,pg:S.pg}));}catch(e){}
   animatePageTurn(dir>0?'forward':'back',()=>renderPage());
 };
 
