@@ -909,7 +909,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   display:none;
 }
 .ink-mode #ink-canvas{display:block;}
-.ink-mode #plain-textarea{pointer-events:none;}
+.ink-mode #plain-textarea{pointer-events:none;} .ink-mode #plain-textarea::placeholder{color:transparent !important;}
 .ink-mode #writing-layer{pointer-events:none;}
 /* Push page content up so ink toolbar doesn't cover it */
 /* ink-mode page-reader height set dynamically via JS */
@@ -1229,11 +1229,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
 }
-#writing-layer:empty::before{
-  content:attr(data-placeholder);
-  color:rgba(26,12,2,.28);
-  pointer-events:none;
-}
+/* placeholder removed */
 #writing-layer:focus{outline:none;}
 .the-page.clean #writing-layer{color:var(--ink);}
 
@@ -1247,7 +1243,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   -webkit-user-select:auto;user-select:auto;
   z-index:4;width:100%;height:100%;box-sizing:border-box;
 }
-#plain-textarea::placeholder{color:rgba(26,12,2,.35);}
+#plain-textarea::placeholder{color:transparent;}
 
 /* Writing mode indicator pill */
 .write-mode-pill{
@@ -1490,13 +1486,13 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
           <div class="pg-clean-ov"></div>
           <!-- WRITING LAYER: transparent overlay for PDF stationery typing -->
           <div id="writing-layer" contenteditable="false"
-               data-placeholder="Tap to start writing…"
+               data-placeholder=""
                style="display:none"
                spellcheck="true"></div>
 
           <!-- PLAIN TEXTAREA: used for non-PDF templates -->
           <textarea id="plain-textarea" style="display:none"
-                    placeholder="Start writing…" spellcheck="true"></textarea>
+                    spellcheck="true"></textarea>
 
           <!-- INK CANVAS — sits above text layers, below pg-head -->
           <canvas id="ink-canvas"></canvas>
