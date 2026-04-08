@@ -5357,6 +5357,9 @@ const INK = {
   style: 'ballpoint',   // ballpoint|marker|brush|pencil|highlight
   eraser: false,
   eraserWidth: null,    // size of eraser (3=small, 8=medium, 16=large)
+  _penEraserActive: false, // true when physical eraser/barrel button is held
+  _savedEraser: false,     // eraser state before pen eraser activated
+  _savedWidth: 3,          // width before pen eraser activated
   drawing: false,
   currentStroke: null,
   strokes: [],          // all strokes for current page
@@ -5596,6 +5599,19 @@ function onInkPointerDown(e){
   if(INK.mode!=='draw')return;
   e.preventDefault();
   e.stopPropagation();
+
+  // ── S Pen eraser end or barrel button detection ──
+  // pointerType==='eraser' → physical eraser end of S Pen
+  // buttons===2 → barrel/side button on USI pens (Lenovo Plus Pen etc.)
+  const penEraser = e.pointerType==='eraser' || (e.pointerType==='pen' && e.buttons===2);
+  if(penEraser){
+    INK._penEraserActive=true;
+    INK._savedEraser=INK.eraser;
+    INK._savedWidth=INK.width;
+    INK.eraser=true;
+    INK.width=INK.eraserWidth||8; // use current eraser size or medium
+  }
+
   INK.drawing=true;
   INK.redoStack=[];
   const pt=getCanvasPoint(e);
@@ -5634,6 +5650,12 @@ function onInkPointerUp(e){
     setTimeout(redrawInk,10);
   }
   INK.currentStroke=null;
+  // ── Restore eraser state after pen eraser/barrel button lifted ──
+  if(INK._penEraserActive){
+    INK._penEraserActive=false;
+    INK.eraser=INK._savedEraser||false;
+    INK.width=INK._savedWidth||3;
+  }
 }
 
 /* ── Wire up canvas events ── */
