@@ -1911,6 +1911,24 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <p style="font-size:10px;color:rgba(201,168,76,.35);margin-bottom:14px">Min 6 characters</p>
       <button class="btn-pri" id="auth-submit-btn" onclick="fbAuthSubmit()" style="width:100%">Sign In</button>
     </div>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(201,168,76,.12)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-size:13px;color:var(--cream);font-weight:600">↩ Reopen last notebook</div>
+          <div style="font-size:11px;color:rgba(253,246,232,.4);margin-top:2px">Automatically return to where you left off when the app opens</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0">
+          <input type="checkbox" id="session-restore-toggle" onchange="toggleSessionRestore(this.checked)"
+            style="opacity:0;width:0;height:0;position:absolute">
+          <span id="session-restore-slider" style="position:absolute;cursor:pointer;inset:0;
+            background:rgba(255,255,255,.1);border-radius:24px;transition:.3s;
+            border:1px solid rgba(201,168,76,.2)">
+            <span id="session-restore-knob" style="position:absolute;height:18px;width:18px;left:3px;bottom:2px;
+              background:#888;border-radius:50%;transition:.3s"></span>
+          </span>
+        </label>
+      </div>
+    </div>
     <div class="modal-foot" style="margin-top:12px">
       <button class="btn-cxl" onclick="closeM('m-auth')">Close</button>
     </div>
@@ -2169,8 +2187,10 @@ function init(){
   // Restore last open notebook after a short delay (lets Firebase init first)
   setTimeout(()=>{
     try{
+      // Only restore if setting is enabled (default: on)
+      const restoreEnabled=localStorage.getItem('ai_session_restore')!=='0';
       const session=localStorage.getItem('ai_session');
-      if(session){
+      if(restoreEnabled&&session){
         const {nbId,pg}=JSON.parse(session);
         const nb=S.notebooks.find(n=>n.id===nbId);
         if(nb){
@@ -3097,12 +3117,31 @@ function doSync(){
   setTimeout(()=>{lbl.textContent='Synced';document.querySelector('.sync-dot').style.background='var(--sage)';toast('Notes synced ☁️','ok');},1400);
 }
 
+function toggleSessionRestore(enabled){
+  try{localStorage.setItem('ai_session_restore', enabled?'1':'0');}catch(e){}
+  // Update toggle visual
+  const knob=document.getElementById('session-restore-knob');
+  const slider=document.getElementById('session-restore-slider');
+  if(knob)knob.style.transform=enabled?'translateX(20px)':'';
+  if(knob)knob.style.background=enabled?'var(--gold)':'#888';
+  if(slider)slider.style.background=enabled?'rgba(201,168,76,.2)':'rgba(255,255,255,.1)';
+  if(slider)slider.style.borderColor=enabled?'rgba(201,168,76,.4)':'rgba(201,168,76,.2)';
+  if(!enabled)localStorage.removeItem('ai_session');
+  toast(enabled?'Will reopen last notebook on launch ✦':'Session restore off','info');
+}
+function loadSessionRestoreToggle(){
+  const enabled=localStorage.getItem('ai_session_restore')!=='0';
+  const cb=document.getElementById('session-restore-toggle');
+  if(cb)cb.checked=enabled;
+  toggleSessionRestore(enabled);
+}
 function openSyncModal(){
   // Close sidebar first, then open modal after transition completes
   // This prevents the overlay click from immediately closing the modal
   closeSidebar();
   setTimeout(()=>{
     openM('m-auth');
+    setTimeout(loadSessionRestoreToggle, 50);
     const loading=document.getElementById('auth-loading');
     if(loading)loading.style.display=(!fbAuth&&fbConfigured)?'block':'none';
   }, 350);
