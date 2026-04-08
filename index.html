@@ -1364,8 +1364,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
           border-radius:6px;color:var(--gold);cursor:pointer;font-size:10px;padding:2px 8px;
           font-family:var(--font-u)">Open ✦</button>
       </div>
-      <div id="col-list"><div style="padding:5px 15px 10px;font-size:11px;color:rgba(201,168,76,.3)">
-        Tap Open to manage your artwork library</div></div>
+
 
       <!-- Quick Templates removed — templates available in notebook toolbar -->
     </div>
@@ -1747,11 +1746,6 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 
     <!-- BROWSE TAB -->
     <div id="lib-browse-panel">
-      <!-- Add new collection -->
-      <div class="lib-add-col" onclick="addLibCollection()">
-        ＋ New Collection (e.g. "Turtle Pack", "Book Theme")
-      </div>
-
       <!-- Upload images — multiple, no limit -->
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <div class="up-drop" id="lib-drop" onclick="document.getElementById('lib-file').click()"
@@ -1759,10 +1753,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
           <div class="u-ico" style="font-size:16px">＋</div>
           <p id="lib-drop-lbl" style="font-size:11px">Add images to library</p>
         </div>
-        <select id="lib-upload-target" class="modal-inp"
-          style="width:140px;margin-bottom:0;font-size:11px">
-          <option value="">No collection</option>
-        </select>
+
       </div>
       <input type="file" id="lib-file" multiple
         accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
@@ -4548,7 +4539,7 @@ function renderColSb(){
       </div>
       <div class="col-info">
         <div class="col-name">${esc(nb.title)}</div>
-        <div class="col-pgs">${nb.artPack.length} image${nb.artPack.length!==1?'s':''} · ${nb.artTpl||'lined'}</div>
+        <div class="col-pgs">${nb.artPack.length} image${nb.artPack.length!==1?'s':''}</div>
       </div>`;
     el.onclick=()=>{openNB(nb);closeSidebar();};
     list.appendChild(el);
