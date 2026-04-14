@@ -605,6 +605,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
     transparent,transparent 31px,
     rgba(0,0,0,1) 31px,rgba(0,0,0,1) 32px);
   background-position:0 40px;
+  background-size:100% 32px;
 }
 .has-art-dotted #pg-line-overlay{
   background-image:radial-gradient(circle,rgba(0,0,0,1) 1.5px,transparent 1.5px);
@@ -671,7 +672,8 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 /* CSS paper patterns */
 .pat-lined{background:var(--page-bg);
   background-image:repeating-linear-gradient(transparent,transparent 31px,rgba(60,40,10,.12) 31px,rgba(60,40,10,.12) 32px);
-  background-position:0 40px}
+  background-position:0 40px;
+  background-size:100% 32px;}
 .pat-dotted{background:var(--page-bg);
   background-image:radial-gradient(circle,rgba(60,40,10,.2) 1px,transparent 1px);
   background-size:22px 22px;background-position:11px 11px}
@@ -1236,7 +1238,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 /* Transparent fullscreen textarea for plain templates */
 #plain-textarea{
   position:absolute;inset:0;
-  padding:22px 10px 6px; /* tight — pg-head is now only ~22px */
+  padding:40px 14px 6px; /* 40px matches CSS line pattern background-position:0 40px */
   background:transparent;border:none;outline:none;resize:none;
   font-family:var(--font-h);font-size:17px;line-height:32px;
   color:#1a0c02;caret-color:#c0392b;
@@ -1855,6 +1857,11 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         </div>
       </div>
       <button class="btn-pri" onclick="fbSyncNow()" style="width:100%;margin-bottom:8px">☁️ Sync Now</button>
+      <button onclick="forcePushLocal()" style="width:100%;margin-bottom:8px;padding:11px;
+        background:rgba(230,126,34,.15);border:1px solid rgba(230,126,34,.4);
+        border-radius:10px;color:#e67e22;font-size:13px;cursor:pointer;font-family:inherit">
+        ⬆️ Push MY data to cloud (overwrite cloud with local)
+      </button>
       <button class="btn-cxl" onclick="fbSignOut()" style="width:100%">Sign Out</button>
     </div>
     <!-- Logged-out state -->
@@ -2176,6 +2183,15 @@ const S={
 /* ═══════ INIT ═══════ */
 function init(){
   genStars();tickClock();setInterval(tickClock,30000);
+  // Auto-push to Firebase every 30 seconds if signed in (like Microsoft AutoSave)
+  setInterval(()=>{
+    if(S.nb&&fbUser&&fbConfigured){
+      saveBackup();
+      fbPush();
+      const lbl=document.getElementById('sync-lbl');
+      if(lbl){lbl.textContent='Saved';setTimeout(()=>{if(lbl)lbl.textContent='Synced';},2000);}
+    }
+  },30000);
   load();if(!S.notebooks.length)seed();
   renderFolders();renderShelf();renderQNList();updateCounts();renderColSb();rebuildFolderSelect();
   installPWA();
@@ -3111,6 +3127,18 @@ function doSync(){
   const lbl=document.getElementById('sync-lbl');lbl.textContent='Syncing…';
   document.querySelector('.sync-dot').style.background='var(--gold)';
   setTimeout(()=>{lbl.textContent='Synced';document.querySelector('.sync-dot').style.background='var(--sage)';toast('Notes synced ☁️','ok');},1400);
+}
+
+function forcePushLocal(){
+  if(!fbUser||!fbDb){toast('Not signed in','info');return;}
+  if(!confirm('Push your local notebooks to the cloud?\n\nThis will OVERWRITE the cloud version with what is currently on this device.\n\nMake sure this device has your most recent data before continuing.'))return;
+  saveBackup(); // backup first
+  fbPush().then(()=>{
+    toast('Local data pushed to cloud ✦','ok',4000);
+    // Reset sync dot to green
+    const dot=document.getElementById('sb-sync-dot');
+    if(dot){dot.style.background='var(--sage)';dot.title='';}
+  });
 }
 
 function toggleSessionRestore(enabled){
@@ -4051,9 +4079,16 @@ function fbStartListener(){
       saveBackup();
     }
 
-    // Warn if remote has significantly less content than local
-    if(localPageCount>remotePageCount+2){
-      console.warn(`AureliaInk: remote has ${remotePageCount} pages, local has ${localPageCount} — remote may be older`);
+    // CRITICAL PROTECTION: if local has more content than remote, don't overwrite
+    // This prevents Firebase from wiping local notebooks that haven't synced yet
+    if(localPageCount > remotePageCount + 2 && localNbCount >= remoteNbCount){
+      console.warn(`AureliaInk: SYNC BLOCKED — local has ${localPageCount} pages (${localNbCount} notebooks), remote has only ${remotePageCount} pages (${remoteNbCount} notebooks). Local data is richer — skipping overwrite.`);
+      // Show warning to user
+      const dot=document.getElementById('sb-sync-dot');
+      if(dot){dot.style.background='#e67e22';dot.title='Sync conflict — local has more data than cloud';}
+      toast('⚠ Sync paused — your local data has more content than the cloud. Open ☁️ Sync to resolve.','info',8000);
+      firstSnapshot=false;
+      return;
     }
 
     window._applyingRemoteData=true; // flag to prevent echo
@@ -4370,15 +4405,18 @@ function attachEnterPageTurn(ta){
   ta._enterPageAttached=true;
   ta.addEventListener('keydown',function(e){
     if(e.key!=='Enter')return;
-    const atBottom=ta.scrollTop+ta.clientHeight>=ta.scrollHeight-36;
-    if(!atBottom)return;
-    const lineCount=Math.floor(ta.clientHeight/22);
-    if(ta.value.split('\n').length<lineCount)return;
-    e.preventDefault();
-    autoSave();
     const nb=S.nb; if(!nb)return;
-    showNextPageHint();
-    autoAdvancePage(nb, S.pg);
+    // Calculate how many lines fit on the page
+    const lineHeight=32;
+    const usableHeight=ta.clientHeight - 40; // subtract top padding
+    const maxLines=Math.floor(usableHeight/lineHeight);
+    const currentLines=ta.value.split('\n').length;
+    if(currentLines>=maxLines){
+      e.preventDefault();
+      autoSave();
+      showNextPageHint();
+      autoAdvancePage(nb, S.pg);
+    }
   });
 }
 
