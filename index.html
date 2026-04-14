@@ -711,10 +711,12 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
   background:rgba(5,3,1,.9);backdrop-filter:blur(12px);
   padding-bottom:calc(4px + var(--safe-bottom))}
 .flip-prev,.flip-next{display:flex;align-items:center;justify-content:center;
-  width:48px;height:40px;border-radius:10px;cursor:pointer;
-  background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);
-  color:var(--gold);font-size:18px;transition:all .2s;flex-shrink:0;
-  -webkit-tap-highlight-color:transparent;user-select:none}
+  width:56px;height:44px;border-radius:12px;cursor:pointer;
+  background:rgba(201,168,76,.18);border:2px solid rgba(201,168,76,.5);
+  color:var(--gold);font-size:22px;transition:all .2s;flex-shrink:0;
+  font-weight:700;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.3);}
 .flip-prev:active,.flip-next:active{background:rgba(201,168,76,.22);transform:scale(.94)}
 .flip-prev:disabled,.flip-next:disabled{opacity:.25;pointer-events:none}
 .flip-mid{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -1409,7 +1411,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
     <div id="nb-view">
       <!-- Notebook toolbar -->
       <div class="nb-bar" id="nb-bar">
-        <button class="nb-back" onclick="closeNB()">← Back</button>
+        <button class="nb-back" onclick="closeNB()">🏠 Main Screen</button>
         <div class="nb-nb-title" id="nb-ttl">—</div>
         <button class="tbb" id="view-artwork-btn" onclick="setArtworkView()" title="Artwork view"><span class="tbb-ico">🖼</span><span class="tbb-lbl">Artwork</span></button><button class="tbb" id="view-clean-btn" onclick="setCleanView()" title="Clean/focus view"><span class="tbb-ico">📄</span><span class="tbb-lbl">Clean</span></button>
         <button class="tbb" id="art-btn" onclick="openArtPickerOrLibrary()" title="Set page artwork"><span class="tbb-ico">🎨</span><span class="tbb-lbl">Artwork</span></button>
@@ -1522,7 +1524,12 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 
       <!-- Flip controls -->
       <div class="flip-row">
-        <button class="flip-prev" id="fp" onclick="flipWithAnim(-1)" aria-label="Previous page">←</button>
+        <button class="flip-prev" id="fp" onclick="flipWithAnim(-1)" aria-label="Previous page" title="Previous page">
+          <span style="display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1">
+            <span>←</span>
+            <span style="font-size:8px;opacity:.7;font-family:var(--font-u);font-weight:400">Prev</span>
+          </span>
+        </button>
         <div class="flip-mid">
           <div class="pg-ind" id="pg-ind">Page 1</div>
           <div style="display:flex;align-items:center;gap:8px">
@@ -1531,7 +1538,12 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
               style="padding:2px 8px;font-size:10px">⟳</button>
           </div>
         </div>
-        <button class="flip-next" id="fn" onclick="flipWithAnim(1)" aria-label="Next page">→</button>
+        <button class="flip-next" id="fn" onclick="flipWithAnim(1)" aria-label="Next page" title="Next page / New page">
+          <span style="display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1">
+            <span>→</span>
+            <span style="font-size:8px;opacity:.7;font-family:var(--font-u);font-weight:400">Next</span>
+          </span>
+        </button>
       </div>
 
       <!-- Auto-loop merged into flip row via JS — no separate bar needed -->
@@ -1838,13 +1850,4 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
           </div>
         </div>
       </div>
-      <p style="font-size:11px;color:rgba(253,246,232,.45);margin-bottom:16px;line-height:1.6">
-        Your notebooks sync automatically across all your devices in real time. Changes made on your phone appear instantly on your tablet and laptop.
-      <br><br>
-      <span style="color:rgba(201,168,76,.4);font-size:10px">Project: aureliainkstudios</span>
-      </p>
-      <div style="display:flex;gap:6px;margin-bottom:8px">
-        <div style="flex:1;padding:8px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.15);
-          border-radius:8px;text-align:center">
-          <div style="font-size:18px">☁️</div>
-          <div s
+      <p sty
