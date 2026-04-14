@@ -1862,6 +1862,18 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         border-radius:10px;color:#e67e22;font-size:13px;cursor:pointer;font-family:inherit">
         ⬆️ Push MY data to cloud (overwrite cloud with local)
       </button>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button onclick="exportAllNotebooks()" style="flex:1;padding:11px;
+          background:rgba(122,158,126,.15);border:1px solid rgba(122,158,126,.4);
+          border-radius:10px;color:#7a9e7e;font-size:13px;cursor:pointer;font-family:inherit">
+          ⬇️ Export to File
+        </button>
+        <button onclick="importNotebooks()" style="flex:1;padding:11px;
+          background:rgba(122,158,126,.15);border:1px solid rgba(122,158,126,.4);
+          border-radius:10px;color:#7a9e7e;font-size:13px;cursor:pointer;font-family:inherit">
+          ⬆️ Import from File
+        </button>
+      </div>
       <button class="btn-cxl" onclick="fbSignOut()" style="width:100%">Sign Out</button>
     </div>
     <!-- Logged-out state -->
@@ -1908,6 +1920,17 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <input class="modal-inp" id="auth-pass" type="password" placeholder="Password" style="margin-bottom:4px">
       <p style="font-size:10px;color:rgba(201,168,76,.35);margin-bottom:14px">Min 6 characters</p>
       <button class="btn-pri" id="auth-submit-btn" onclick="fbAuthSubmit()" style="width:100%">Sign In</button>
+    </div>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(201,168,76,.12)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;color:var(--gold);font-weight:600">☁️ Cloud Backups</div>
+        <button onclick="saveCloudBackup().then(()=>{toast('Cloud backup saved ✦','ok');loadCloudBackups();})"
+          style="padding:4px 10px;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);
+          border-radius:6px;color:var(--gold);font-size:11px;cursor:pointer">
+          💾 Save Now
+        </button>
+      </div>
+      <div id="cloud-backup-list"></div>
     </div>
     <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(201,168,76,.12)">
       <div style="font-size:13px;color:var(--gold);font-weight:600;margin-bottom:8px">📦 Local Backups</div>
@@ -2184,12 +2207,18 @@ const S={
 function init(){
   genStars();tickClock();setInterval(tickClock,30000);
   // Auto-push to Firebase every 30 seconds if signed in (like Microsoft AutoSave)
+  // Also saves a local backup every 5 minutes (not every push)
+  let _autoSaveCount=0;
   setInterval(()=>{
     if(S.nb&&fbUser&&fbConfigured){
-      saveBackup();
+      _autoSaveCount++;
+      // Save local backup every 5 minutes (10 × 30s)
+      if(_autoSaveCount%10===0)saveBackup();
+      // Save cloud backup every 10 minutes (20 × 30s)
+      if(_autoSaveCount%20===0)saveCloudBackup();
       fbPush();
       const lbl=document.getElementById('sync-lbl');
-      if(lbl){lbl.textContent='Saved';setTimeout(()=>{if(lbl)lbl.textContent='Synced';},2000);}
+      if(lbl){lbl.textContent='Saved ✦';setTimeout(()=>{if(lbl)lbl.textContent='Synced';},2000);}
     }
   },30000);
   load();if(!S.notebooks.length)seed();
@@ -3141,6 +3170,78 @@ function forcePushLocal(){
   });
 }
 
+/* ══════════════════════════════════════════════════════════
+   EXPORT / IMPORT — Layer 3 backup
+   Downloads all notebooks as a JSON file to your device.
+   Completely independent of Firebase.
+══════════════════════════════════════════════════════════ */
+
+function exportAllNotebooks(){
+  if(!S.notebooks.length){toast('No notebooks to export','info');return;}
+  const filledPages=S.notebooks.reduce((t,n)=>t+(n.pages?.filter(p=>p.trim()).length||0),0);
+  const exportData={
+    exportedAt:new Date().toISOString(),
+    exportedBy:'AureliaInk',
+    version:'1.0',
+    notebookCount:S.notebooks.length,
+    filledPageCount:filledPages,
+    notebooks:S.notebooks,
+    folders:S.folders,
+    quickNotes:S.quickNotes
+  };
+  const json=JSON.stringify(exportData,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toLocaleDateString('en-US',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
+  a.href=url;
+  a.download=`AureliaInk_backup_${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},500);
+  toast(`Exported ${S.notebooks.length} notebooks to file ✦`,'ok',4000);
+}
+
+function importNotebooks(){
+  if(!confirm('Import notebooks from a backup file?\n\nThis will MERGE imported notebooks with your current ones — it will not delete anything.'))return;
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='.json,application/json';
+  input.onchange=async(e)=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    try{
+      const text=await file.text();
+      const data=JSON.parse(text);
+      if(!data.notebooks||!Array.isArray(data.notebooks)){
+        toast('Invalid backup file — not an AureliaInk export','info');return;
+      }
+      // Merge — add notebooks that don't already exist by ID
+      let added=0;
+      data.notebooks.forEach(nb=>{
+        if(!S.notebooks.find(n=>n.id===nb.id)){
+          S.notebooks.push(nb);
+          added++;
+        }
+      });
+      if(added===0){
+        toast('All notebooks already exist — nothing new to import','info');return;
+      }
+      save();fbSyncDebounced();
+      renderFolders();
+      renderShelf(S.folder==='all'?null:S.folder);
+      updateCounts();
+      closeM('m-auth');
+      toast(`Imported ${added} notebook${added!==1?'s':''} ✦`,'ok',4000);
+    }catch(e){
+      toast('Import failed: '+e.message,'info');
+    }
+  };
+  document.body.appendChild(input);
+  input.click();
+  setTimeout(()=>input.remove(),1000);
+}
+
 function toggleSessionRestore(enabled){
   try{localStorage.setItem('ai_session_restore', enabled?'1':'0');}catch(e){}
   // Update toggle visual
@@ -3167,6 +3268,7 @@ function openSyncModal(){
     openM('m-auth');
     setTimeout(loadSessionRestoreToggle, 50);
     setTimeout(renderBackupOptions, 50);
+    setTimeout(loadCloudBackups, 100);
     const loading=document.getElementById('auth-loading');
     if(loading)loading.style.display=(!fbAuth&&fbConfigured)?'block':'none';
   }, 350);
@@ -3901,8 +4003,6 @@ async function fbSyncNow(){
 }
 
 async function fbPush(){
-  // Save local backup before pushing to Firebase
-  saveBackup();
   if(!fbUser||!fbDb||!fbConfigured)return;
   try{
     const {doc,setDoc,ref,uploadString,getDownloadURL}=window._fbModules;
@@ -3954,6 +4054,121 @@ let fbLastAppliedTs = 0; // track last remote timestamp we applied
    before any Firebase sync overwrites local data.
    Backups stored as ai_backup_0, ai_backup_1, ai_backup_2
 ══════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════
+   FIREBASE STORAGE BACKUP SYSTEM
+   Saves full notebook content to Firebase Storage as JSON files.
+   Survives browser cache clearing, device changes, everything.
+   Stored at: users/{uid}/backups/backup_{timestamp}.json
+   Keeps last 10 backups in Storage.
+══════════════════════════════════════════════════════════ */
+
+async function saveCloudBackup(){
+  if(!fbUser||!fbStorage||!fbConfigured)return;
+  try{
+    const {ref,uploadString,listAll,deleteObject}=window._fbModules;
+    const uid=fbUser.uid;
+    const ts=new Date().toISOString().replace(/[:.]/g,'-');
+    const label=new Date().toLocaleString('en-US',{month:'short',day:'numeric',
+      hour:'2-digit',minute:'2-digit'});
+
+    // Build full backup including page content
+    const backup={
+      ts:new Date().toISOString(),
+      label,
+      version:'2.0',
+      notebookCount:S.notebooks.length,
+      pageCount:S.notebooks.reduce((t,n)=>t+(n.pages?.length||0),0),
+      filledPageCount:S.notebooks.reduce((t,n)=>t+(n.pages?.filter(p=>p.trim()).length||0),0),
+      notebooks:S.notebooks // full content including all pages
+    };
+
+    // Upload to Firebase Storage
+    const storageRef=ref(fbStorage,`users/${uid}/backups/backup_${ts}.json`);
+    await uploadString(storageRef,JSON.stringify(backup),'raw',{contentType:'application/json'});
+    console.log(`AureliaInk: cloud backup saved — ${backup.notebookCount} notebooks, ${backup.filledPageCount} pages with content`);
+
+    // Clean up old backups — keep only last 10
+    try{
+      const listRef=ref(fbStorage,`users/${uid}/backups/`);
+      const result=await listAll(listRef);
+      const items=result.items.sort((a,b)=>a.name.localeCompare(b.name));
+      if(items.length>10){
+        const toDelete=items.slice(0,items.length-10);
+        await Promise.all(toDelete.map(item=>deleteObject(item)));
+      }
+    }catch(e){} // cleanup failure is non-critical
+
+  }catch(e){
+    console.warn('Cloud backup failed:',e.message);
+  }
+}
+
+async function restoreCloudBackup(downloadURL){
+  if(!fbUser){toast('Sign in first','info');return;}
+  try{
+    const resp=await fetch(downloadURL);
+    const backup=await resp.json();
+    if(!backup.notebooks){toast('Invalid backup file','info');return;}
+    if(!confirm(`Restore backup from ${backup.label}?\n\n${backup.notebookCount} notebooks · ${backup.filledPageCount} pages with content\n\nThis will replace your current notebooks.`))return;
+    saveBackup(); // save local backup before restoring
+    S.notebooks=backup.notebooks;
+    saveNotebooksLocal(S.notebooks);
+    renderFolders();
+    renderShelf(S.folder==='all'?null:S.folder);
+    updateCounts();
+    closeM('m-auth');
+    toast(`Restored ${backup.notebookCount} notebooks from ${backup.label} ✦`,'ok',5000);
+  }catch(e){
+    toast('Restore failed: '+e.message,'info');
+  }
+}
+
+async function loadCloudBackups(){
+  const el=document.getElementById('cloud-backup-list');
+  if(!el)return;
+  if(!fbUser||!fbStorage){
+    el.innerHTML='<div style="font-size:12px;color:rgba(253,246,232,.3)">Sign in to see cloud backups</div>';
+    return;
+  }
+  el.innerHTML='<div style="font-size:12px;color:rgba(253,246,232,.3)">Loading…</div>';
+  try{
+    const {ref,listAll,getDownloadURL,getMetadata}=window._fbModules;
+    const uid=fbUser.uid;
+    const listRef=ref(fbStorage,`users/${uid}/backups/`);
+    const result=await listAll(listRef);
+    if(!result.items.length){
+      el.innerHTML='<div style="font-size:12px;color:rgba(253,246,232,.3)">No cloud backups yet</div>';
+      return;
+    }
+    // Get metadata for each backup
+    const items=result.items.sort((a,b)=>b.name.localeCompare(a.name)).slice(0,10);
+    const details=await Promise.all(items.map(async item=>{
+      const url=await getDownloadURL(item);
+      const meta=await getMetadata(item);
+      return{url,name:item.name,size:meta.size,updated:new Date(meta.updated)};
+    }));
+    el.innerHTML=details.map(d=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;
+        padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px;
+        border:1px solid rgba(201,168,76,.12);margin-bottom:6px">
+        <div>
+          <div style="font-size:12px;color:var(--cream)">
+            ${d.updated.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+          </div>
+          <div style="font-size:11px;color:rgba(253,246,232,.4)">${(d.size/1024).toFixed(1)} KB</div>
+        </div>
+        <button onclick="restoreCloudBackup('${d.url}')" style="padding:5px 10px;
+          background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);
+          border-radius:6px;color:var(--gold);font-size:11px;cursor:pointer">
+          Restore
+        </button>
+      </div>
+    `).join('');
+  }catch(e){
+    el.innerHTML=`<div style="font-size:12px;color:rgba(253,246,232,.3)">Could not load backups: ${e.message}</div>`;
+  }
+}
 
 function saveBackup(){
   try{
@@ -4075,7 +4290,9 @@ function fbStartListener(){
     const remoteNbCount=(data.notebooks||[]).length;
     const remotePageCount=(data.notebooks||[]).reduce((t,n)=>t+(n.pages?.filter(p=>p.trim()).length||0),0);
 
-    if(localNbCount>0&&localPageCount>0){
+    // Only backup before overwrite if local has meaningful content
+    // Backup is now handled by the 5-minute interval instead
+    if(localNbCount>0&&localPageCount>2){
       saveBackup();
     }
 
