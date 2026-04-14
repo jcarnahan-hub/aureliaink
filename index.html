@@ -20,7 +20,7 @@
   import { getFirestore, doc, setDoc, getDoc,
            collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, uploadString,
-           getDownloadURL, deleteObject, listAll }
+           getDownloadURL, deleteObject, listAll, getMetadata }
            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
   window._fbModules = {
     initializeApp, getAnalytics,
@@ -28,7 +28,7 @@
     signOut, onAuthStateChanged,
     GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
     getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc,
-    getStorage, ref, uploadBytes, uploadString, getDownloadURL, deleteObject, listAll
+    getStorage, ref, uploadBytes, uploadString, getDownloadURL, deleteObject, listAll, getMetadata
   };
 </script>
 <!-- PWA manifest injected dynamically -->
