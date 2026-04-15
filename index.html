@@ -692,11 +692,21 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 
 /* Page inner content */
 .pg-inner{position:relative;z-index:2;display:flex;flex-direction:column;height:100%}
-.pg-head{padding:3px 10px 2px;
+.pg-head{padding:4px 12px 4px;
   display:flex;justify-content:space-between;align-items:center;
-  flex-shrink:0;min-height:0}
-.pg-num{font-family:var(--font-h);font-size:10px;color:rgba(60,40,10,.28)}
-.pg-stamp{font-family:var(--font-h);font-size:9px;color:rgba(60,40,10,.22)}
+  flex-shrink:0;min-height:0;border-bottom:1px solid rgba(60,40,10,.06)}
+.pg-num{font-family:var(--font-h);font-size:11px;color:rgba(60,40,10,.35)}
+.pg-stamp{font-family:var(--font-h);font-size:12px;color:rgba(60,40,10,.6);
+  cursor:pointer;padding:2px 8px;border-radius:6px;
+  border:1px solid transparent;transition:all .15s;user-select:none;
+  -webkit-tap-highlight-color:transparent;}
+.pg-stamp:hover{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.3);
+  color:rgba(60,40,10,.8);}
+.pg-stamp.has-date{color:rgba(60,40,10,.7);font-weight:500;}
+.pg-stamp-hint{font-size:11px;color:rgba(60,40,10,.3);
+  cursor:pointer;padding:2px 8px;border-radius:6px;
+  border:1px dashed rgba(60,40,10,.2);transition:all .15s;}
+.pg-stamp-hint:hover{border-color:rgba(201,168,76,.4);color:rgba(60,40,10,.6);}
 .pg-body{flex:1;padding:4px 10px 4px;overflow:hidden}
 .pg-ta{width:100%;height:100%;border:none;outline:none;resize:none;
   background:transparent;font-family:var(--font-h);font-size:18px;
@@ -1503,10 +1513,10 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
           <canvas id="ink-canvas"></canvas>
 
           <!-- PAGE HEADER — page number + stamp, always on top -->
-          <div class="pg-inner" style="pointer-events:none;position:relative;z-index:5">
+          <div class="pg-inner" style="pointer-events:auto;position:relative;z-index:5">
             <div class="pg-head">
               <span class="pg-num" id="pg-num">1</span>
-              <span class="pg-stamp" id="pg-stamp"></span>
+              <span class="pg-stamp" id="pg-stamp" onclick="openPageDatePicker()" title="Tap to set page date"></span>
             </div>
           </div>
 
@@ -1828,22 +1838,4 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
     </div>
 
     <div class="modal-foot" id="lib-browse-foot">
-      <button class="btn-cxl" onclick="closeM('m-library')">Close</button>
-      <button class="btn-pri" onclick="switchLibTab('apply',document.getElementById('lib-tab-apply'))"
-        id="lib-apply-btn" style="display:none">Apply to Notebook ✦</button>
-    </div>
-  </div>
-</div>
-
-<!-- FIREBASE AUTH MODAL -->
-<div class="modal-ov" id="m-auth">
-  <div class="modal">
-    <div class="modal-title">☁️ Sync Account</div>
-    <!-- Logged-in state -->
-    <div id="auth-loggedin" style="display:none">
-      <div class="auth-user-row">
-        <div class="auth-avatar">✦</div>
-        <div>
-          <div class="auth-email" id="auth-email-display">—</div>
-          <div class="sync-status">
-            <div class="sync-dot-firebase"
+      <button class="btn-cxl" onclick="closeM('
