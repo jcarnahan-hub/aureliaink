@@ -1422,6 +1422,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <button class="tbb" onclick="openExport()" title="Export to PDF"><span class="tbb-ico">📤</span><span class="tbb-lbl">Export</span></button>
         <button class="tbb" onclick="printNotebook()" title="Print notebook"><span class="tbb-ico">🖨️</span><span class="tbb-lbl">Print</span></button>
         <button class="tbb" id="email-todo-btn" onclick="emailTodoList()" title="Email this To-Do list" style="display:none"><span class="tbb-ico">📧</span><span class="tbb-lbl">Email</span></button>
+        <button class="tbb" id="voice-todo-btn" onclick="startVoiceTodo()" title="Add task by voice" style="display:none"><span class="tbb-ico">🎤</span><span class="tbb-lbl">Voice</span></button>
         <button class="tbb" id="cal-btn-tog" onclick="toggleCalibration()" title="Align text to PDF lines" style="display:none"><span class="tbb-ico">📐</span><span class="tbb-lbl">Align</span></button>
       </div>
 
@@ -1845,9 +1846,4 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <div>
           <div class="auth-email" id="auth-email-display">—</div>
           <div class="sync-status">
-            <div class="sync-dot-firebase" id="fb-dot" style="background:var(--sage)"></div>
-            <span id="fb-status-txt" style="color:rgba(201,168,76,.55)">Connected</span>
-          </div>
-        </div>
-      </div>
-      <p sty
+            <div class="sync-dot-firebase"
