@@ -1625,6 +1625,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
     <div class="modal-lbl">Emoji (optional)</div>
     <div style="display:flex;gap:8px;align-items:center">
       <input class="modal-inp" id="m-nb-emoji" type="text" placeholder="Paste emoji…" maxlength="4" inputmode="text" style="flex:1">
+      <button onclick="openEmojiPicker('m-nb-emoji',null)" style="padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.25);border-radius:8px;color:rgba(201,168,76,.8);cursor:pointer;font-size:13px;white-space:nowrap">😊 Pick</button>
       <button onclick="document.getElementById('m-nb-emoji').value=''" style="padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.25);border-radius:8px;color:rgba(201,168,76,.8);cursor:pointer;font-size:13px;white-space:nowrap">✕ Clear</button>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
@@ -1995,6 +1996,64 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
     </div>
     <div class="modal-foot" style="margin-top:12px">
       <button class="btn-cxl" onclick="closeM('m-auth')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- FULL EMOJI PICKER MODAL -->
+<div class="modal-ov" id="m-emoji-picker">
+  <div class="modal" style="max-width:380px;max-height:85vh;display:flex;flex-direction:column">
+    <div class="modal-title">😊 Pick an Emoji</div>
+
+    <!-- Search -->
+    <input id="emoji-search" class="modal-inp" type="text"
+      placeholder="Search emojis… (e.g. star, heart, work)"
+      oninput="searchEmojis(this.value)"
+      style="margin-bottom:10px">
+
+    <!-- Category tabs -->
+    <div id="emoji-cats" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0"></div>
+
+    <!-- Emoji grid -->
+    <div id="emoji-grid" style="display:grid;grid-template-columns:repeat(8,1fr);
+      gap:4px;overflow-y:auto;flex:1;padding-right:4px;
+      scrollbar-width:thin;scrollbar-color:rgba(201,168,76,.3) transparent">
+    </div>
+
+    <div class="modal-foot" style="margin-top:10px">
+      <button class="btn-cxl" onclick="closeM('m-emoji-picker')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOLDER CREATE/EDIT MODAL -->
+<div class="modal-ov" id="m-folder">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title" id="folder-modal-title">📁 New Folder</div>
+
+    <div class="modal-lbl">Folder Name</div>
+    <input class="modal-inp" id="m-folder-name" type="text"
+      placeholder="e.g. Work Projects, Family, Travel…"
+      maxlength="30" inputmode="text">
+
+    <div class="modal-lbl" style="margin-top:12px">Icon</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <button id="folder-icon-preview" onclick="openEmojiPicker('m-folder-icon', updateFolderIconPreview)"
+        style="font-size:36px;width:56px;height:56px;border-radius:12px;cursor:pointer;
+        background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.25);
+        display:flex;align-items:center;justify-content:center;flex-shrink:0;
+        -webkit-tap-highlight-color:transparent;transition:all .15s"
+        title="Tap to pick an icon">📁</button>
+      <div>
+        <div style="font-size:13px;color:var(--cream);margin-bottom:4px">Tap the icon to change it</div>
+        <div style="font-size:11px;color:rgba(253,246,232,.4)">Hundreds of emoji to choose from</div>
+      </div>
+    </div>
+    <input type="hidden" id="m-folder-icon" value="📁">
+
+    <div class="modal-foot">
+      <button class="btn-cxl" onclick="closeM('m-folder')">Cancel</button>
+      <button class="btn-pri" id="folder-save-btn" onclick="saveFolderModal()">Create ✦</button>
     </div>
   </div>
 </div>
@@ -2899,33 +2958,182 @@ function updateCounts(){
 }
 
 /* ═══════ FOLDER CRUD ═══════ */
+const EMOJI_DATA={
+  'Folders & Work':['📁','💼','📋','📌','📍','🗂','🗃','📊','📈','📉','💹','🖥','💻','🖨','⌨','🖱','📱','☎','📞','📟','📠','📧','📨','📩','📤','📥','📦','📫','📪','📬','📭','📮','🗳','✏','✒','🖋','🖊','📝','📄','📃','📑','📊','📋','📁','📂','🗂','🗒','🗓','📆','📅','🗑'],
+  'Stars & Symbols':['⭐','🌟','✨','💫','🌠','🎯','🎪','🎭','🎨','🎬','🎤','🎧','🎼','🎹','🥁','🎷','🎺','🎸','🪕','🎻','🎲','♟','🎮','🕹','🎰','🧩','🪄','🎩','🔮','🪩','💎','👑','🏆','🥇','🥈','🥉','🎖','🏅','🎗'],
+  'Hearts & Emotions':['❤','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💕','💞','💓','💗','💖','💘','💝','💟','☮','✌','🤞','🙏','👏','🤝','🫶','❤‍🔥','💯','✅','☑','💪','🙌','👍','🌈','🎉','🎊','🎈','🥳'],
+  'Nature & Animals':['🌸','🌺','🌻','🌹','🌷','💐','🌿','🍀','🌱','🌲','🌳','🍁','🍂','🍃','🌾','🌵','🎋','🎍','🍄','🐾','🦋','🐝','🐞','🦄','🐶','🐱','🐰','🐻','🦊','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐙','🦋','🦚','🦜','🦩','🐠','🐬','🐳','🦋'],
+  'Food & Drink':['🍕','🍔','🌮','🍣','🍜','🍝','🥗','🍱','🧁','🎂','🍰','🍩','🍪','🍫','🍬','🍭','🍦','☕','🍵','🧃','🥤','🍺','🥂','🍷','🍸','🍹','🧋','🥐','🥑','🍎','🍊','🍋','🍇','🍓','🫐','🍑','🥭','🍍'],
+  'Travel & Places':['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','🗼','🗽','⛪','🕌','🕍','⛩','🕋','⛲','🌁','🌃','🌄','🌅','🌆','🌇','🌉','🌌','✈','🚀','🛸','🚂','🚢','🏖','🏝','🗻','🏔','🌋'],
+  'Activities':['⚽','🏀','🏈','⚾','🥎','🏐','🏉','🎾','🥏','🎱','🏓','🏸','🥊','🥋','⛳','🎣','🤿','🎽','🎿','🛷','🥌','🎯','🎳','🏋','🤸','🏄','🧗','🚴','🏊','🧘','🤾','🏇','🤺','🏌','🧜'],
+  'Objects':['💡','🔦','🕯','🪔','💰','💳','💵','🔑','🗝','🔐','🔒','🔓','🔨','🪓','⛏','🔧','🔩','🪛','🔫','🪃','🛡','⚔','🗡','🪚','🧲','🪝','🧰','🧲','💊','💉','🩺','🩻','🧬','🔬','🔭','📡','🚪','🛏','🛋','🚽','🧹','🧺'],
+  'Symbols':['🌙','☀','⭐','🌟','💥','🔥','❄','🌊','⚡','🌈','☁','⛅','🌤','🌪','🌫','❓','❗','💯','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔶','🔷','🔸','🔹','🔺','🔻','💠','🔘','🔲','🔳']
+};
+
+let _emojiTarget=null; // which input/function to send emoji to
+
+function openEmojiPicker(targetInputId, onSelectFn){
+  _emojiTarget={inputId:targetInputId, fn:onSelectFn};
+  const current=targetInputId?document.getElementById(targetInputId)?.value:'';
+  buildEmojiPicker(current);
+  openM('m-emoji-picker');
+  setTimeout(()=>document.getElementById('emoji-search')?.focus(),100);
+}
+
+function buildEmojiPicker(selected='',filter=''){
+  // Build category tabs
+  const catEl=document.getElementById('emoji-cats');
+  const cats=Object.keys(EMOJI_DATA);
+  catEl.innerHTML=cats.map((c,i)=>`
+    <button onclick="filterEmojiCat('${c}',this)"
+      class="emoji-cat-btn" data-cat="${c}"
+      style="padding:4px 8px;font-size:11px;border-radius:6px;cursor:pointer;
+      background:${i===0?'rgba(201,168,76,.2)':'rgba(255,255,255,.06)'};
+      border:${i===0?'1px solid var(--gold)':'1px solid rgba(201,168,76,.15)'};
+      color:${i===0?'var(--gold)':'rgba(253,246,232,.6)'};
+      font-family:var(--font-u);white-space:nowrap;transition:all .12s">
+      ${c.split(' ')[0]}
+    </button>`).join('');
+
+  // Build emoji grid — show first category
+  renderEmojiGrid(cats[0], selected, filter);
+}
+
+function filterEmojiCat(cat, btn){
+  document.querySelectorAll('.emoji-cat-btn').forEach(b=>{
+    const active=b===btn;
+    b.style.background=active?'rgba(201,168,76,.2)':'rgba(255,255,255,.06)';
+    b.style.border=active?'1px solid var(--gold)':'1px solid rgba(201,168,76,.15)';
+    b.style.color=active?'var(--gold)':'rgba(253,246,232,.6)';
+  });
+  renderEmojiGrid(cat,'','');
+  document.getElementById('emoji-search').value='';
+}
+
+function renderEmojiGrid(cat, selected='', filter=''){
+  const grid=document.getElementById('emoji-grid');
+  let emojis=[];
+  if(filter){
+    // Search across all categories
+    const f=filter.toLowerCase();
+    Object.values(EMOJI_DATA).forEach(arr=>arr.forEach(e=>emojis.push(e)));
+    // Simple filter — just show all and let user pick
+  }else{
+    emojis=EMOJI_DATA[cat]||[];
+  }
+  grid.innerHTML=emojis.map(e=>`
+    <button onclick="pickEmoji('${e}')"
+      style="font-size:24px;padding:4px;border-radius:8px;cursor:pointer;
+      background:${e===selected?'rgba(201,168,76,.2)':'transparent'};
+      border:${e===selected?'1px solid var(--gold)':'1px solid transparent'};
+      transition:all .1s;-webkit-tap-highlight-color:transparent;
+      display:flex;align-items:center;justify-content:center;aspect-ratio:1"
+      title="${e}"
+      onmouseover="this.style.background='rgba(201,168,76,.1)'"
+      onmouseout="this.style.background='${e===selected?'rgba(201,168,76,.2)':'transparent'}'">
+      ${e}
+    </button>`).join('');
+}
+
+function searchEmojis(query){
+  const grid=document.getElementById('emoji-grid');
+  if(!query.trim()){
+    const firstCat=Object.keys(EMOJI_DATA)[0];
+    renderEmojiGrid(firstCat,'','');
+    return;
+  }
+  // Show all emojis when searching
+  const all=[];
+  Object.values(EMOJI_DATA).forEach(arr=>arr.forEach(e=>all.push(e)));
+  grid.innerHTML=all.map(e=>`
+    <button onclick="pickEmoji('${e}')"
+      style="font-size:24px;padding:4px;border-radius:8px;cursor:pointer;
+      background:transparent;border:1px solid transparent;
+      transition:all .1s;-webkit-tap-highlight-color:transparent;
+      display:flex;align-items:center;justify-content:center;aspect-ratio:1"
+      onmouseover="this.style.background='rgba(201,168,76,.1)'"
+      onmouseout="this.style.background='transparent'">
+      ${e}
+    </button>`).join('');
+}
+
+function pickEmoji(emoji){
+  if(_emojiTarget){
+    if(_emojiTarget.inputId){
+      const el=document.getElementById(_emojiTarget.inputId);
+      if(el)el.value=emoji;
+    }
+    if(_emojiTarget.fn) _emojiTarget.fn(emoji);
+  }
+  closeM('m-emoji-picker');
+}
+
 function openNewFolder(){
-  const name=prompt('New folder name:','');
-  if(!name||!name.trim())return;
-  const icons=['📁','💼','🌸','✅','💡','🌙','⭐','🎯','📝','🔖','🎨','🌿','🏠','✈️','💰','🎵'];
-  const icon=prompt('Choose an icon (paste one emoji):\n📁 💼 🌸 ✅ 💡 🌙 ⭐ 🎯 📝 🔖 🎨 🌿 🏠 ✈️ 💰 🎵','📁');
-  const id='folder_'+uid();
-  S.folders.push({id,name:name.trim(),icon:icon||'📁',desc:name.trim()+' notes'});
-  save();renderFolders();updateCounts();
-  // Also update the new notebook folder dropdown
-  rebuildFolderSelect();
-  toast(`"${name.trim()}" folder created ✦`,'ok');
+  document.getElementById('folder-modal-title').textContent='📁 New Folder';
+  document.getElementById('m-folder-name').value='';
+  document.getElementById('m-folder-icon').value='📁';
+  document.getElementById('folder-save-btn').textContent='Create ✦';
+  window._editingFolderId=null;
+  buildFolderIconGrid('📁');
+  openM('m-folder');
+  setTimeout(()=>document.getElementById('m-folder-name').focus(),100);
+}
+
+function openEditFolder(id){
+  const fd=S.folders.find(f=>f.id===id);if(!fd)return;
+  document.getElementById('folder-modal-title').textContent='✏️ Edit Folder';
+  document.getElementById('m-folder-name').value=fd.name;
+  document.getElementById('m-folder-icon').value=fd.icon||'📁';
+  document.getElementById('folder-save-btn').textContent='Save ✦';
+  window._editingFolderId=id;
+  buildFolderIconGrid(fd.icon||'📁');
+  openM('m-folder');
+  setTimeout(()=>document.getElementById('m-folder-name').focus(),100);
+}
+
+function updateFolderIconPreview(emoji){
+  const preview=document.getElementById('folder-icon-preview');
+  if(preview)preview.textContent=emoji;
+}
+
+function buildFolderIconGrid(selected){
+  // Just update the preview button with the current icon
+  const preview=document.getElementById('folder-icon-preview');
+  if(preview)preview.textContent=selected||'📁';
+  document.getElementById('m-folder-icon').value=selected||'📁';
+}
+
+function saveFolderModal(){
+  const name=document.getElementById('m-folder-name').value.trim();
+  if(!name){toast('Please enter a folder name','info');return;}
+  const icon=document.getElementById('m-folder-icon').value||'📁';
+  const editId=window._editingFolderId;
+
+  if(editId){
+    // Editing existing folder
+    const fd=S.folders.find(f=>f.id===editId);
+    if(!fd)return;
+    fd.name=name;
+    fd.icon=icon;
+    fd.desc=name+' notes';
+    save();renderFolders();updateCounts();rebuildFolderSelect();
+    if(S.folder===editId){
+      document.getElementById('shelf-ttl').textContent=`${icon} ${name}`;
+    }
+    closeM('m-folder');
+    toast(`"${name}" updated ✦`,'ok');
+  }else{
+    // Creating new folder
+    const id='folder_'+uid();
+    S.folders.push({id,name,icon,desc:name+' notes'});
+    save();renderFolders();updateCounts();rebuildFolderSelect();
+    closeM('m-folder');
+    toast(`"${name}" folder created ✦`,'ok');
+  }
 }
 
 function renameFolderPrompt(id){
-  const fd=S.folders.find(f=>f.id===id);if(!fd)return;
-  const newName=prompt('Rename folder:',fd.name);
-  if(!newName||!newName.trim())return;
-  const newIcon=prompt('Change icon? (leave blank to keep current)\nCurrent: '+fd.icon,fd.icon);
-  fd.name=newName.trim();
-  if(newIcon&&newIcon.trim())fd.icon=newIcon.trim();
-  fd.desc=fd.name+' notes';
-  save();renderFolders();updateCounts();rebuildFolderSelect();
-  // Update shelf title if currently viewing this folder
-  if(S.folder===id){
-    document.getElementById('shelf-ttl').textContent=`${fd.icon} ${fd.name}`;
-  }
-  toast(`Folder renamed to "${fd.name}" ✦`,'ok');
+  openEditFolder(id);
 }
 
 function deleteFolderPrompt(id){
