@@ -3626,32 +3626,49 @@ function showUploadOverlay(current, total, filename){
     ov=document.createElement('div');
     ov.id='upload-overlay';
     ov.style.cssText=`position:fixed;inset:0;z-index:9999;
-      background:rgba(12,9,4,.88);backdrop-filter:blur(8px);
+      background:rgba(12,9,4,.92);backdrop-filter:blur(10px);
       display:flex;flex-direction:column;align-items:center;justify-content:center;
       padding:32px;gap:16px;`;
     ov.innerHTML=`
-      <div style="font-size:36px">🖼</div>
-      <div id="uov-title" style="font-family:Georgia,serif;color:var(--gold);font-size:20px;text-align:center">Uploading images…</div>
-      <div id="uov-file" style="font-size:13px;color:rgba(253,246,232,.6);text-align:center;max-width:280px;word-break:break-all"></div>
-      <div style="width:100%;max-width:320px;background:rgba(255,255,255,.08);border-radius:12px;height:12px;overflow:hidden">
-        <div id="uov-bar" style="height:100%;background:linear-gradient(90deg,var(--gold),#e8c96a);border-radius:12px;width:0%;transition:width .4s ease"></div>
+      <div style="font-size:40px">🖼</div>
+      <div id="uov-title" style="font-family:Georgia,serif;color:var(--gold);font-size:20px;text-align:center;font-weight:600">Uploading images…</div>
+      <div id="uov-file" style="font-size:13px;color:rgba(253,246,232,.6);text-align:center;max-width:300px;word-break:break-all;min-height:18px"></div>
+      <div style="width:100%;max-width:340px;background:rgba(255,255,255,.1);border-radius:12px;height:14px;overflow:hidden;border:1px solid rgba(201,168,76,.2)">
+        <div id="uov-bar" style="height:100%;background:linear-gradient(90deg,var(--gold),#e8c96a);border-radius:12px;width:0%;transition:width .3s ease"></div>
       </div>
-      <div id="uov-count" style="font-size:14px;color:rgba(253,246,232,.5)"></div>
+      <div id="uov-count" style="font-size:15px;color:rgba(253,246,232,.6);font-weight:600"></div>
+      <div id="uov-pct" style="font-size:28px;color:var(--gold);font-weight:700;font-family:Georgia,serif"></div>
+      <div style="font-size:12px;color:rgba(253,246,232,.3);margin-top:-8px">Please wait — do not close the app</div>
     `;
     document.body.appendChild(ov);
   }
   const pct=Math.round((current/total)*100);
   document.getElementById('uov-bar').style.width=pct+'%';
   document.getElementById('uov-count').textContent=`${current} of ${total} images`;
-  document.getElementById('uov-file').textContent=filename?`"${filename}"` :'';
-  document.getElementById('uov-title').textContent=current===total?'Finalising…':'Uploading images…';
+  document.getElementById('uov-pct').textContent=pct+'%';
+  document.getElementById('uov-file').textContent=filename?`Uploading: "${filename}"` :'';
+  const title=document.getElementById('uov-title');
+  if(title){
+    if(current===0)title.textContent='Starting upload…';
+    else if(current===total)title.textContent='Finalising…';
+    else title.textContent=`Uploading image ${current+1} of ${total}…`;
+  }
 }
 function hideUploadOverlay(){
   const ov=document.getElementById('upload-overlay');
   if(ov){
-    ov.style.opacity='0';
-    ov.style.transition='opacity .4s';
-    setTimeout(()=>ov.remove(),400);
+    // Show 100% briefly before hiding
+    const bar=document.getElementById('uov-bar');
+    const pct=document.getElementById('uov-pct');
+    const title=document.getElementById('uov-title');
+    if(bar)bar.style.width='100%';
+    if(pct)pct.textContent='100%';
+    if(title)title.textContent='Complete! ✦';
+    setTimeout(()=>{
+      ov.style.opacity='0';
+      ov.style.transition='opacity .5s';
+      setTimeout(()=>ov.remove(),500);
+    },600);
   }
 }
 
@@ -5815,24 +5832,29 @@ async function handleLibUpload(e){
   if(!valid.length)return;
 
   const targetColId=document.getElementById('lib-upload-target')?.value||'';
-  toast(`Uploading ${valid.length} image${valid.length!==1?'s':''}…`,'info');
+
+  // Show full-screen overlay (same as notebook art upload)
+  showUploadOverlay(0, valid.length, valid[0].name);
 
   let loaded=0;
   for(const file of valid){
+    showUploadOverlay(loaded, valid.length, file.name);
     const imageId=uid();
     const url=await uploadFileToStorage(file,imageId);
     S.artLibrary.images.push({
       id:imageId,
       name:file.name.replace(/\.[^/.]+$/,''),
-      dataURL:url,       // now a Storage URL or dataURL fallback
+      dataURL:url,
       colId:targetColId||null,
       added:new Date().toISOString()
     });
     loaded++;
-    uploadProgress(loaded,valid.length,'Images');
+    showUploadOverlay(loaded, valid.length, file.name);
   }
+  hideUploadOverlay();
   saveArtLibrary();
   renderLibBrowse();
+  toast(`${loaded} image${loaded!==1?'s':''} added to Library ✦`,'ok',4000);
 }
 
 /* ── Collections ── */
