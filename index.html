@@ -1271,6 +1271,58 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
 }
 #plain-textarea::placeholder{color:transparent;}
 
+/* ── Floating format toolbar — appears on text selection ── */
+#fmt-toolbar{
+  position:fixed;z-index:9999;
+  background:rgba(17,12,6,.97);border:1px solid rgba(201,168,76,.35);
+  border-radius:12px;padding:5px 6px;
+  display:none;align-items:center;gap:3px;
+  box-shadow:0 4px 20px rgba(0,0,0,.6);
+  backdrop-filter:blur(12px);
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+#fmt-toolbar button{
+  width:34px;height:32px;border-radius:8px;border:none;cursor:pointer;
+  background:transparent;color:var(--cream);font-size:13px;font-weight:600;
+  font-family:var(--font-u);transition:all .12s;display:flex;
+  align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+}
+#fmt-toolbar button:hover,#fmt-toolbar button.active{
+  background:rgba(201,168,76,.2);color:var(--gold);
+}
+#fmt-toolbar .fmt-sep{
+  width:1px;height:20px;background:rgba(201,168,76,.2);margin:0 2px;flex-shrink:0;
+}
+/* Rich text page body */
+#rich-textarea{
+  position:absolute;inset:0;
+  padding:40px 14px 20px;
+  background:transparent;border:none;outline:none;
+  font-family:var(--font-h);font-size:17px;line-height:32px;
+  color:#1a0c02;caret-color:#c0392b;
+  -webkit-user-select:auto;user-select:auto;
+  z-index:4;width:100%;height:100%;box-sizing:border-box;
+  overflow-y:auto;word-wrap:break-word;
+}
+#rich-textarea:focus{outline:none;}
+#rich-textarea h1{font-size:24px;font-weight:700;line-height:1.3;margin:8px 0 4px;color:#1a0c02;}
+#rich-textarea h2{font-size:20px;font-weight:700;line-height:1.3;margin:6px 0 4px;color:#1a0c02;}
+#rich-textarea h3{font-size:18px;font-weight:600;line-height:1.3;margin:4px 0 4px;color:#1a0c02;}
+#rich-textarea ul{padding-left:20px;margin:4px 0;}
+#rich-textarea ol{padding-left:20px;margin:4px 0;}
+#rich-textarea li{margin:2px 0;line-height:32px;}
+#rich-textarea mark{background:rgba(201,168,76,.35);border-radius:3px;padding:0 2px;}
+#rich-textarea b,#rich-textarea strong{font-weight:700;}
+#rich-textarea i,#rich-textarea em{font-style:italic;}
+#rich-textarea u{text-decoration:underline;}
+/* Light mode rich text */
+body.light-theme #rich-textarea{color:rgba(42,22,4,.9);}
+body.light-theme #rich-textarea h1,
+body.light-theme #rich-textarea h2,
+body.light-theme #rich-textarea h3{color:rgba(42,22,4,.95);}
+
 /* Writing mode indicator pill */
 .write-mode-pill{
   position:absolute;top:6px;left:50%;transform:translateX(-50%);
@@ -1442,6 +1494,7 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
         <button class="tbb" onclick="addPage()" title="Add new page"><span class="tbb-ico">＋</span><span class="tbb-lbl">Page</span></button>
         <button class="tbb" onclick="deletePage()" title="Delete current page"><span class="tbb-ico">🗑</span><span class="tbb-lbl">Delete</span></button>
         <button class="tbb" onclick="openExport()" title="Export to PDF"><span class="tbb-ico">📤</span><span class="tbb-lbl">Export</span></button>
+        <button class="tbb" id="fmt-help-btn" onclick="showFormatHelp()" title="Text formatting help"><span class="tbb-ico" style="font-family:Georgia,serif;font-weight:700;font-size:14px">Aa</span><span class="tbb-lbl">Format</span></button>
         <button class="tbb" onclick="printNotebook()" title="Print notebook"><span class="tbb-ico">🖨️</span><span class="tbb-lbl">Print</span></button>
         <button class="tbb" onclick="openPageNavigator()" title="Navigate pages"><span class="tbb-ico">📄</span><span class="tbb-lbl">Pages</span></button>
         <button class="tbb" id="email-todo-btn" onclick="emailTodoList()" title="Email this To-Do list" style="display:none"><span class="tbb-ico">📧</span><span class="tbb-lbl">Email</span></button>
@@ -1519,6 +1572,10 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
                spellcheck="true"></div>
 
           <!-- PLAIN TEXTAREA: used for non-PDF templates -->
+          <!-- RICH TEXT AREA -->
+          <div id="rich-textarea" contenteditable="true" style="display:none"
+            spellcheck="true"></div>
+
           <textarea id="plain-textarea" style="display:none"
                     spellcheck="true"></textarea>
 
@@ -1998,6 +2055,23 @@ body{font-family:var(--font-u);color:var(--cream);touch-action:pan-y}
       <button class="btn-cxl" onclick="closeM('m-auth')">Close</button>
     </div>
   </div>
+</div>
+
+<!-- FLOATING FORMAT TOOLBAR -->
+<div id="fmt-toolbar">
+  <button onclick="fmt('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
+  <button onclick="fmt('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
+  <button onclick="fmt('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
+  <div class="fmt-sep"></div>
+  <button onclick="fmtBlock('h1')" title="Heading 1" style="font-size:11px">H1</button>
+  <button onclick="fmtBlock('h2')" title="Heading 2" style="font-size:11px">H2</button>
+  <button onclick="fmtBlock('h3')" title="Heading 3" style="font-size:11px">H3</button>
+  <div class="fmt-sep"></div>
+  <button onclick="fmtBlock('ul')" title="Bullet list">•≡</button>
+  <button onclick="fmtBlock('ol')" title="Numbered list">1≡</button>
+  <div class="fmt-sep"></div>
+  <button onclick="fmt('hilite')" title="Highlight" style="color:rgba(201,168,76,.9)">▌</button>
+  <button onclick="fmt('clear')" title="Clear formatting" style="font-size:11px;color:rgba(253,246,232,.5)">✕</button>
 </div>
 
 <!-- FULL EMOJI PICKER MODAL -->
@@ -2716,23 +2790,29 @@ async function renderPage(){
     pgBody.style.display='block';
     renderTodo(pgBody,nb.pages[i]||'',i);
   }else{
-    // Plain CSS template — full-page textarea
+    // Rich text area for all non-todo templates
     const pgBodyTodo=document.getElementById('pg-body-todo');
     if(pgBodyTodo)pgBodyTodo.style.display='none';
     if(wl)wl.style.display='none';
-    if(pta){
-      pta.style.display='block';
-      pta.value=nb.pages[i]||'';
-      // Attach auto-page and autosave once
-      if(!pta._wired){
-        pta._wired=true;
-        pta.addEventListener('input',debounce(()=>{
-          nb.pages[S.pg]=pta.value;
+    if(pta)pta.style.display='none';
+    const rta=document.getElementById('rich-textarea');
+    if(rta){
+      rta.style.display='block';
+      // Load page content — stored as HTML
+      rta.innerHTML=nb.pages[i]||'';
+      // Wire input handler once
+      if(!rta._wired){
+        rta._wired=true;
+        rta.addEventListener('input',debounce(()=>{
+          nb.pages[S.pg]=rta.innerHTML;
           autoSave();
         },600));
-        attachEnterPageTurn(pta);
+        // Show/hide format toolbar on selection
+        document.addEventListener('selectionchange',handleSelectionChange);
+        // Keyboard shortcuts
+        rta.addEventListener('keydown',handleRichKeydown);
       }
-      pta.focus();
+      rta.focus();
     }
   }
 
@@ -3189,15 +3269,18 @@ function openNB(nb){
   const inkToggle=document.getElementById('ink-mode-toggle');
   const emailBtn=document.getElementById('email-todo-btn');
   const voiceBtn=document.getElementById('voice-todo-btn');
+  const fmtBtn=document.getElementById('fmt-help-btn');
   if(isTodoNB){
     // Lock to todo — hide template switcher AND ink toggle entirely
     if(tplBar)tplBar.style.display='none';
     if(inkToggle)inkToggle.classList.remove('show');
     if(emailBtn)emailBtn.style.display='';
     if(voiceBtn)voiceBtn.style.display='';
+    if(fmtBtn)fmtBtn.style.display='none'; // no rich text in todo
   }else{
     if(emailBtn)emailBtn.style.display='none';
     if(voiceBtn)voiceBtn.style.display='none';
+    if(fmtBtn)fmtBtn.style.display='';
     if(tplBar)tplBar.style.display='';
     // template chips — scope to tpl-bar only, never touch modal chips
     document.querySelectorAll('#tpl-bar .tpl-chip').forEach(c=>{
@@ -3262,6 +3345,12 @@ function toggleToolbars(){
 function closeNB(){
   autoSave();stopAuto();S.clean=false;
   try{localStorage.removeItem('ai_session');}catch(e){}
+  // Hide format toolbar and cleanup rich textarea
+  const tb=document.getElementById('fmt-toolbar');
+  if(tb)tb.style.display='none';
+  document.removeEventListener('selectionchange',handleSelectionChange);
+  const rta=document.getElementById('rich-textarea');
+  if(rta){rta.style.display='none';rta._wired=false;}
   // Restore toolbars for shelf view
   document.getElementById('nb-bar')?.classList.remove('collapsed');
   document.getElementById('tpl-bar')?.classList.remove('collapsed');
@@ -6327,6 +6416,9 @@ function getInkCanvas(){
 /* ── Mode toggle ── */
 function setInkMode(mode){
   INK.mode=mode;
+  // Hide format toolbar when switching modes
+  const fmtTb=document.getElementById('fmt-toolbar');
+  if(fmtTb)fmtTb.style.display='none';
   const page=document.getElementById('the-page');
   const toggle=document.getElementById('ink-mode-toggle');
   const toolbar=document.getElementById('ink-toolbar');
@@ -6866,6 +6958,199 @@ function jumpToPage(idx){
   animatePageTurn(dir,()=>renderPage());
   // Update session
   try{localStorage.setItem('ai_session',JSON.stringify({nbId:nb.id,pg:S.pg}));}catch(e){}
+}
+
+/* ══════════════════════════════════════════════════════════
+   RICH TEXT FORMATTING
+   Floating toolbar appears on text selection.
+   Clean, minimal — bold/italic/underline/headers/lists/highlight.
+══════════════════════════════════════════════════════════ */
+
+let _fmtSelectionTimer=null;
+
+function handleSelectionChange(){
+  clearTimeout(_fmtSelectionTimer);
+  _fmtSelectionTimer=setTimeout(()=>{
+    const sel=window.getSelection();
+    const tb=document.getElementById('fmt-toolbar');
+    if(!tb)return;
+
+    // Only show if selection is inside rich-textarea and has text
+    const rta=document.getElementById('rich-textarea');
+    if(!rta||rta.style.display==='none'){tb.style.display='none';return;}
+    if(!sel||sel.isCollapsed||!sel.toString().trim()){
+      tb.style.display='none';return;
+    }
+    // Check selection is inside rich-textarea
+    const range=sel.getRangeAt(0);
+    if(!rta.contains(range.commonAncestorContainer)){
+      tb.style.display='none';return;
+    }
+
+    // Position toolbar above the selection
+    const rect=range.getBoundingClientRect();
+    tb.style.display='flex';
+    const tbW=tb.offsetWidth||280;
+    let left=rect.left+(rect.width/2)-(tbW/2);
+    left=Math.max(8,Math.min(left,window.innerWidth-tbW-8));
+    let top=rect.top-44;
+    if(top<8)top=rect.bottom+8; // flip below if too close to top
+    tb.style.left=left+'px';
+    tb.style.top=top+'px';
+
+    // Update active states
+    tb.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    if(document.queryCommandState('bold'))tb.querySelector('[title*="Bold"]')?.classList.add('active');
+    if(document.queryCommandState('italic'))tb.querySelector('[title*="Italic"]')?.classList.add('active');
+    if(document.queryCommandState('underline'))tb.querySelector('[title*="Underline"]')?.classList.add('active');
+  },50);
+}
+
+function fmt(cmd){
+  const rta=document.getElementById('rich-textarea');
+  if(!rta)return;
+  if(cmd==='hilite'){
+    // Toggle gold highlight
+    if(document.queryCommandState('hiliteColor')){
+      document.execCommand('hiliteColor',false,'transparent');
+    }else{
+      document.execCommand('hiliteColor',false,'rgba(201,168,76,0.35)');
+    }
+  }else if(cmd==='clear'){
+    document.execCommand('removeFormat',false,null);
+    // Also unwrap any headings
+    const sel=window.getSelection();
+    if(sel&&!sel.isCollapsed){
+      document.execCommand('formatBlock',false,'p');
+    }
+  }else{
+    document.execCommand(cmd,false,null);
+  }
+  // Save after formatting
+  nb_pages_save_rich();
+  // Hide toolbar after applying
+  setTimeout(()=>{
+    const tb=document.getElementById('fmt-toolbar');
+    if(tb)tb.style.display='none';
+  },100);
+}
+
+function fmtBlock(tag){
+  const rta=document.getElementById('rich-textarea');
+  if(!rta)return;
+  if(tag==='ul'||tag==='ol'){
+    const cmd=tag==='ul'?'insertUnorderedList':'insertOrderedList';
+    document.execCommand(cmd,false,null);
+  }else{
+    // Toggle heading — if already this heading, revert to p
+    document.execCommand('formatBlock',false,tag);
+  }
+  nb_pages_save_rich();
+  setTimeout(()=>{
+    const tb=document.getElementById('fmt-toolbar');
+    if(tb)tb.style.display='none';
+  },100);
+}
+
+function nb_pages_save_rich(){
+  const nb=S.nb;if(!nb)return;
+  const rta=document.getElementById('rich-textarea');
+  if(rta)nb.pages[S.pg]=rta.innerHTML;
+  autoSave();
+}
+
+function handleRichKeydown(e){
+  // Ctrl+B, Ctrl+I, Ctrl+U shortcuts
+  if(e.ctrlKey||e.metaKey){
+    if(e.key==='b'){e.preventDefault();fmt('bold');}
+    if(e.key==='i'){e.preventDefault();fmt('italic');}
+    if(e.key==='u'){e.preventDefault();fmt('underline');}
+  }
+  // Hide toolbar on Escape
+  if(e.key==='Escape'){
+    const tb=document.getElementById('fmt-toolbar');
+    if(tb)tb.style.display='none';
+  }
+}
+
+/* ── Format help popup ── */
+function showFormatHelp(){
+  const existing=document.getElementById('fmt-help-popup');
+  if(existing){existing.remove();return;}
+
+  const popup=document.createElement('div');
+  popup.id='fmt-help-popup';
+  popup.style.cssText=`position:fixed;top:56px;right:12px;z-index:9999;
+    background:rgba(17,12,6,.97);border:1px solid rgba(201,168,76,.3);
+    border-radius:16px;padding:18px;box-shadow:0 8px 32px rgba(0,0,0,.6);
+    backdrop-filter:blur(16px);width:min(300px,88vw);`;
+
+  popup.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:14px;color:var(--gold);font-weight:700;font-family:Georgia,serif">
+        Aa Text Formatting
+      </div>
+      <button onclick="document.getElementById('fmt-help-popup').remove()"
+        style="background:none;border:none;color:rgba(253,246,232,.4);
+        font-size:18px;cursor:pointer;padding:0 4px;line-height:1">✕</button>
+    </div>
+
+    <div style="font-size:13px;color:rgba(253,246,232,.8);margin-bottom:14px;
+      line-height:1.6;padding:10px 12px;background:rgba(201,168,76,.08);
+      border-radius:10px;border:1px solid rgba(201,168,76,.15)">
+      ✦ <strong style="color:var(--gold)">Select any text</strong> on the page
+      to see formatting options appear above your selection.
+    </div>
+
+    <div style="font-size:12px;color:rgba(253,246,232,.5);margin-bottom:10px;
+      font-weight:600;text-transform:uppercase;letter-spacing:.5px">
+      Available Formatting
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${[
+        ['B','Bold','Select text → tap B  ·  or Ctrl+B'],
+        ['I','Italic','Select text → tap I  ·  or Ctrl+I'],
+        ['U','Underline','Select text → tap U  ·  or Ctrl+U'],
+        ['H1','Large Heading','Select text → tap H1'],
+        ['H2','Medium Heading','Select text → tap H2'],
+        ['H3','Small Heading','Select text → tap H3'],
+        ['•≡','Bullet List','Select text → tap •≡'],
+        ['1≡','Numbered List','Select text → tap 1≡'],
+        ['▌','Gold Highlight','Select text → tap ▌'],
+        ['✕','Clear Formatting','Select text → tap ✕'],
+      ].map(([icon,name,desc])=>`
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:28px;height:28px;border-radius:7px;flex-shrink:0;
+            background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.25);
+            display:flex;align-items:center;justify-content:center;
+            font-size:12px;font-weight:700;color:var(--gold);font-family:Georgia,serif">
+            ${icon}
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--cream);font-weight:600">${name}</div>
+            <div style="font-size:11px;color:rgba(253,246,232,.4)">${desc}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(201,168,76,.12);
+      font-size:11px;color:rgba(253,246,232,.35);line-height:1.5;text-align:center">
+      Formatting syncs across all your devices automatically
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+
+  // Close on outside click
+  setTimeout(()=>document.addEventListener('click',function handler(e){
+    const p=document.getElementById('fmt-help-popup');
+    if(p&&!p.contains(e.target)&&e.target.id!=='fmt-help-btn'){
+      p.remove();
+      document.removeEventListener('click',handler);
+    }
+  }),100);
 }
 
 function openPageDatePicker(){
