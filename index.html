@@ -2808,21 +2808,49 @@ async function renderPage(){
     const rta=document.getElementById('rich-textarea');
     if(rta){
       rta.style.display='block';
-      // Load page content — stored as HTML
-      rta.innerHTML=nb.pages[i]||'';
-      // Wire input handler once
+
+      // Always remove old handler before adding new one
+      if(rta._inputHandler){
+        rta.removeEventListener('input',rta._inputHandler);
+      }
+
+      // Load page content
+      // If content has no HTML tags treat as plain text
+      const pageContent=nb.pages[i]||'';
+      if(pageContent&&!pageContent.includes('<')){
+        // Plain text — convert to HTML preserving line breaks
+        rta.innerHTML=pageContent.split('\n').join('<br>');
+      }else{
+        rta.innerHTML=pageContent;
+      }
+
+      // Wire fresh input handler for this page
+      rta._inputHandler=debounce(()=>{
+        if(S.nb)S.nb.pages[S.pg]=rta.innerHTML;
+        autoSave();
+      },600);
+      rta.addEventListener('input',rta._inputHandler);
+
+      // Wire keyboard shortcuts once
       if(!rta._wired){
         rta._wired=true;
-        rta.addEventListener('input',debounce(()=>{
-          nb.pages[S.pg]=rta.innerHTML;
-          autoSave();
-        },600));
-        // Show/hide format toolbar on selection
-        document.addEventListener('selectionchange',handleSelectionChange);
-        // Keyboard shortcuts
         rta.addEventListener('keydown',handleRichKeydown);
+        document.addEventListener('selectionchange',handleSelectionChange);
       }
-      rta.focus();
+
+      // Focus — delay slightly on mobile to ensure element is visible first
+      setTimeout(()=>{
+        if(rta.style.display!=='none'){
+          rta.focus();
+          // Place cursor at end
+          const range=document.createRange();
+          const sel=window.getSelection();
+          range.selectNodeContents(rta);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      },50);
     }
   }
 
@@ -3360,7 +3388,15 @@ function closeNB(){
   if(tb)tb.style.display='none';
   document.removeEventListener('selectionchange',handleSelectionChange);
   const rta=document.getElementById('rich-textarea');
-  if(rta){rta.style.display='none';rta._wired=false;}
+  if(rta){
+    rta.style.display='none';
+    rta._wired=false;
+    if(rta._inputHandler){
+      rta.removeEventListener('input',rta._inputHandler);
+      rta._inputHandler=null;
+    }
+    rta.innerHTML='';
+  }
   // Restore toolbars for shelf view
   document.getElementById('nb-bar')?.classList.remove('collapsed');
   document.getElementById('tpl-bar')?.classList.remove('collapsed');
