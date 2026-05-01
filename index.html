@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<!-- AureliaInk v36 — fixed 5/1/2026 -->
+<!-- AureliaInk v37 — fixed 5/1/2026 -->
 <title>🦋 AureliaInk ✦ Your Magical Notebook</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3444,7 +3444,12 @@ function toggleToolbars(){
   else collapseToolbars();
 }
 function closeNB(){
-  saveCurrentPageNow();stopAuto();S.clean=false;
+  saveCurrentPageNow();
+  // Push to Firebase immediately — don't wait for the debounce timer
+  clearTimeout(fbSyncTimer);
+  fbSyncTimer=null;
+  fbPush();
+  stopAuto();S.clean=false;
   try{localStorage.removeItem('ai_session');}catch(e){}
   // Hide format toolbar and cleanup rich textarea
   const tb=document.getElementById('fmt-toolbar');
@@ -3576,6 +3581,7 @@ function saveCurrentPageNow(){
   }
   nb.modified=new Date().toISOString();
   save();
+  if(typeof fbSyncDebounced==='function')fbSyncDebounced();
 }
 
 /* ═══════ AUTO SAVE ═══════ */
