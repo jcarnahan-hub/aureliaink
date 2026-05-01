@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<!-- AureliaInk v38-debug — fixed 5/1/2026 -->
+<!-- AureliaInk v39 — fixed 5/1/2026 -->
 <title>🦋 AureliaInk ✦ Your Magical Notebook</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3451,10 +3451,19 @@ function closeNB(){
   console.log('[AureliaInk] closeNB called. nb=',_nb?.id,'pg=',_pg,'rta.innerHTML length=',_rta?.innerHTML?.length,'rta display=',_rta?.style?.display);
   saveCurrentPageNow();
   console.log('[AureliaInk] after saveCurrentPageNow. nb.pages[pg]=',_nb?.pages[_pg]?.substring(0,80));
+  // Block onSnapshot from overwriting while we push
+  window._nbClosing=true;
   // Push to Firebase immediately — don't wait for the debounce timer
   clearTimeout(fbSyncTimer);
   fbSyncTimer=null;
-  fbPush().then(()=>console.log('[AureliaInk] fbPush complete after closeNB')).catch(e=>console.error('[AureliaInk] fbPush error',e));
+  fbPush().then(()=>{
+    console.log('[AureliaInk] fbPush complete after closeNB');
+    // Update fbLastAppliedTs to the timestamp we just pushed so onSnapshot echo is ignored
+    window._nbClosing=false;
+  }).catch(e=>{
+    console.error('[AureliaInk] fbPush error',e);
+    window._nbClosing=false;
+  });
   stopAuto();S.clean=false;
   try{localStorage.removeItem('ai_session');}catch(e){}
   // Hide format toolbar and cleanup rich textarea
@@ -4951,6 +4960,8 @@ async function fbPush(){
       collectionsMeta:colMeta,
       updatedAt:new Date().toISOString()
     },{merge:true});
+    // Update our last-applied timestamp so the echo snapshot is ignored
+    fbLastAppliedTs=Date.now();
   }catch(e){console.error('fbPush error:',e);}
 }
 
@@ -5202,6 +5213,14 @@ function fbStartListener(){
     if(!snap.exists())return;
     const data=snap.data();
     const remoteTs=new Date(data.updatedAt||0).getTime();
+
+    // CRITICAL: Never overwrite S.notebooks while a notebook is open or closing.
+    // S.nb points into S.notebooks — replacing it here silently wipes editor content.
+    if(S.nb||window._nbClosing){
+      console.log('[AureliaInk] onSnapshot suppressed — notebook open or closing');
+      firstSnapshot=false;
+      return;
+    }
 
     // Skip if we've already applied this exact snapshot
     if(remoteTs<=fbLastAppliedTs){
