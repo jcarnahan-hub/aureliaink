@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<!-- AureliaInk v34 — fixed 5/1/2026 -->
+<!-- AureliaInk v35 — fixed 5/1/2026 -->
 <title>🦋 AureliaInk ✦ Your Magical Notebook</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2850,7 +2850,11 @@ async function renderPage(){
 
       // Always remove old handler before adding new one
       if(rta._inputHandler){
+        if(rta._inputHandler.cancel)rta._inputHandler.cancel();
         rta.removeEventListener('input',rta._inputHandler);
+      }
+      if(rta._immediateHandler){
+        rta.removeEventListener('input',rta._immediateHandler);
       }
 
       // Click anywhere on the page to refocus rich textarea
@@ -3552,11 +3556,11 @@ function qTpl(tpl,el){
 function saveCurrentPageNow(){
   const nb=S.nb;if(!nb)return;
   const i=S.pg;
-  // Cancel any pending debounced input handler so it can't fire stale content after page changes
   const rta=document.getElementById('rich-textarea');
   if(rta){
-    if(rta._inputHandler){rta.removeEventListener('input',rta._inputHandler);rta._inputHandler=null;}
-    if(rta._immediateHandler){rta.removeEventListener('input',rta._immediateHandler);rta._immediateHandler=null;}
+    // Cancel the pending debounce timer so it cannot fire after S.pg changes
+    if(rta._inputHandler&&rta._inputHandler.cancel)rta._inputHandler.cancel();
+    if(rta._immediateHandler&&rta._immediateHandler.cancel)rta._immediateHandler.cancel();
     // Synchronously capture current content right now
     if(rta.style.display!=='none'&&S.tpl!=='todo'){
       while(nb.pages.length<=i)nb.pages.push('');
@@ -4125,7 +4129,7 @@ function hideUploadOverlay(){
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function nowStamp(){const d=new Date();return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}
 function relTime(iso){const d=Date.now()-new Date(iso).getTime();if(d<60000)return'just now';if(d<3600000)return Math.floor(d/60000)+'m ago';if(d<86400000)return Math.floor(d/3600000)+'h ago';return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
-function debounce(fn,ms){let t;return function(...a){clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
+function debounce(fn,ms){let t;const d=function(...a){clearTimeout(t);t=setTimeout(()=>fn(...a),ms)};d.cancel=function(){clearTimeout(t);t=null;};return d;}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function flLbl(f){
   if(f==='all')return'All';
