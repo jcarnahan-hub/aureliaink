@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<!-- AureliaInk v33 — fixed 5/1/2026 -->
+<!-- AureliaInk v34 — fixed 5/1/2026 -->
 <title>🦋 AureliaInk ✦ Your Magical Notebook</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3486,7 +3486,7 @@ function closeNB(){
 
 /* ═══════ FLIP ═══════ */
 function flip(dir){
-  const nb=S.nb;if(!nb)return;autoSave();
+  const nb=S.nb;if(!nb)return;saveCurrentPageNow();
   let nxt=S.pg+dir;
   if(nxt>=nb.pages.length){
     if(S.autoOn){nxt=0;if(nb.colId&&nb.tpl==='pdf'){const col=S.collections.find(c=>c.id===nb.colId);if(col)nb.colOff=(nb.colOff+1)%col.pages.length;}}
@@ -3546,6 +3546,30 @@ function qTpl(tpl,el){
     S.tpl=tpl;S.nb.tpl=tpl;S.nb.colId=null;renderPage();toast(`Template: ${tpl} ✦`,'info');
   }
   document.querySelectorAll('.tpl-pip').forEach(p=>p.classList.remove('active'));el.classList.add('active');
+}
+
+/* ═══════ SYNC PAGE SAVE — call before changing S.pg ═══════ */
+function saveCurrentPageNow(){
+  const nb=S.nb;if(!nb)return;
+  const i=S.pg;
+  // Cancel any pending debounced input handler so it can't fire stale content after page changes
+  const rta=document.getElementById('rich-textarea');
+  if(rta){
+    if(rta._inputHandler){rta.removeEventListener('input',rta._inputHandler);rta._inputHandler=null;}
+    if(rta._immediateHandler){rta.removeEventListener('input',rta._immediateHandler);rta._immediateHandler=null;}
+    // Synchronously capture current content right now
+    if(rta.style.display!=='none'&&S.tpl!=='todo'){
+      while(nb.pages.length<=i)nb.pages.push('');
+      nb.pages[i]=rta.innerHTML||'';
+    }
+  }
+  const pta=document.getElementById('plain-textarea');
+  if(pta&&pta.style.display!=='none'&&S.tpl!=='todo'){
+    while(nb.pages.length<=i)nb.pages.push('');
+    nb.pages[i]=pta.value||'';
+  }
+  nb.modified=new Date().toISOString();
+  save();
 }
 
 /* ═══════ AUTO SAVE ═══════ */
@@ -5549,7 +5573,7 @@ function animatePageTurn(dir, callback){
 /* ─── Animated flip (replaces old flip()) ─── */
 window.flipWithAnim=function(dir){
   const nb=S.nb; if(!nb)return;
-  autoSave();
+  saveCurrentPageNow();
   let nxt=S.pg+dir;
   if(nxt>=nb.pages.length){
     if(S.autoOn){
@@ -7194,7 +7218,7 @@ function jumpToPage(idx){
   const nb=S.nb;if(!nb)return;
   document.getElementById('pg-nav-popup')?.remove();
   if(idx===S.pg)return;
-  autoSave(); // ← save current page content before navigating away
+  saveCurrentPageNow(); // synchronously save + cancel pending debounce before S.pg changes
   const dir=idx>S.pg?'forward':'back';
   S.pg=idx;
   animatePageTurn(dir,()=>renderPage());
