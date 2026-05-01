@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<!-- AureliaInk v35 — fixed 5/1/2026 -->
+<!-- AureliaInk v36 — fixed 5/1/2026 -->
 <title>🦋 AureliaInk ✦ Your Magical Notebook</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3444,7 +3444,7 @@ function toggleToolbars(){
   else collapseToolbars();
 }
 function closeNB(){
-  autoSave();stopAuto();S.clean=false;
+  saveCurrentPageNow();stopAuto();S.clean=false;
   try{localStorage.removeItem('ai_session');}catch(e){}
   // Hide format toolbar and cleanup rich textarea
   const tb=document.getElementById('fmt-toolbar');
@@ -3455,10 +3455,12 @@ function closeNB(){
     rta.style.display='none';
     rta._wired=false;
     if(rta._inputHandler){
+      if(rta._inputHandler.cancel)rta._inputHandler.cancel();
       rta.removeEventListener('input',rta._inputHandler);
       rta._inputHandler=null;
     }
     if(rta._immediateHandler){
+      if(rta._immediateHandler.cancel)rta._immediateHandler.cancel();
       rta.removeEventListener('input',rta._immediateHandler);
       rta._immediateHandler=null;
     }
