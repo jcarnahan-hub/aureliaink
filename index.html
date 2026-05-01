@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<!-- AureliaInk v37 — fixed 5/1/2026 -->
+<!-- AureliaInk v38-debug — fixed 5/1/2026 -->
 <title>🦋 AureliaInk ✦ Your Magical Notebook</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3353,6 +3353,7 @@ function rebuildFolderSelect(){
 
 /* ═══════ OPEN / CLOSE ═══════ */
 function openNB(nb){
+  console.log('[AureliaInk] openNB: id=',nb.id,'pages count=',nb.pages?.length,'page[0] length=',nb.pages?.[0]?.length,'page[0] preview=',nb.pages?.[0]?.substring(0,80));
   S.nb=nb;S.pg=0;S.tpl=nb.tpl||'lined';S.clean=false;
   // Save session so app reopens to this notebook
   try{localStorage.setItem('ai_session',JSON.stringify({nbId:nb.id,pg:0}));}catch(e){}
@@ -3444,11 +3445,16 @@ function toggleToolbars(){
   else collapseToolbars();
 }
 function closeNB(){
+  const _nb=S.nb;
+  const _pg=S.pg;
+  const _rta=document.getElementById('rich-textarea');
+  console.log('[AureliaInk] closeNB called. nb=',_nb?.id,'pg=',_pg,'rta.innerHTML length=',_rta?.innerHTML?.length,'rta display=',_rta?.style?.display);
   saveCurrentPageNow();
+  console.log('[AureliaInk] after saveCurrentPageNow. nb.pages[pg]=',_nb?.pages[_pg]?.substring(0,80));
   // Push to Firebase immediately — don't wait for the debounce timer
   clearTimeout(fbSyncTimer);
   fbSyncTimer=null;
-  fbPush();
+  fbPush().then(()=>console.log('[AureliaInk] fbPush complete after closeNB')).catch(e=>console.error('[AureliaInk] fbPush error',e));
   stopAuto();S.clean=false;
   try{localStorage.removeItem('ai_session');}catch(e){}
   // Hide format toolbar and cleanup rich textarea
@@ -3564,6 +3570,7 @@ function saveCurrentPageNow(){
   const nb=S.nb;if(!nb)return;
   const i=S.pg;
   const rta=document.getElementById('rich-textarea');
+  console.log('[AureliaInk] saveCurrentPageNow: pg=',i,'rta display=',rta?.style?.display,'rta content length=',rta?.innerHTML?.length,'tpl=',S.tpl);
   if(rta){
     // Cancel the pending debounce timer so it cannot fire after S.pg changes
     if(rta._inputHandler&&rta._inputHandler.cancel)rta._inputHandler.cancel();
@@ -5239,6 +5246,7 @@ function fbStartListener(){
     }
 
     window._applyingRemoteData=true; // flag to prevent echo
+    console.log('[AureliaInk] onSnapshot APPLYING remote data. remoteTs=',remoteTs,'localTs=',localTs,'S.nb=',S.nb?.id);
     if(data.notebooks)S.notebooks=data.notebooks;
     if(data.quickNotes)S.quickNotes=data.quickNotes;
     if(data.folders)S.folders=data.folders;
