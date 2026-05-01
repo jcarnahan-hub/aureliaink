@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<!-- AureliaInk v32 — fixed 4/3/2026 -->
+<!-- AureliaInk v33 — fixed 5/1/2026 -->
 <title>🦋 AureliaInk ✦ Your Magical Notebook</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3592,7 +3592,7 @@ function createNB(){
   setTimeout(()=>openNB(nb),300);
 }
 function selC(el){document.querySelectorAll('.cov-opt').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
-function renameNB(nb){const n=prompt('Rename:',nb.title);if(n?.trim()){nb.title=n.trim();save();renderShelf(S.folder==='all'?null:S.folder);toast('Renamed ✦','ok');}}
+function renameNB(nb){const n=prompt('Rename:',nb.title);if(n?.trim()){nb.title=n.trim();save();fbSyncDebounced();renderShelf(S.folder==='all'?null:S.folder);if(S.nb&&S.nb.id===nb.id){const t=document.getElementById('tb-title');if(t)t.textContent=nb.emoji?nb.emoji+' '+nb.title:nb.title;}toast('Renamed ✦','ok');}}
 
 /* ═══════ QUICK NOTES ═══════ */
 function toggleQN(){document.getElementById('qn-panel').classList.toggle('open');setTimeout(()=>document.getElementById('qn-ta').focus(),300);}
@@ -7194,6 +7194,7 @@ function jumpToPage(idx){
   const nb=S.nb;if(!nb)return;
   document.getElementById('pg-nav-popup')?.remove();
   if(idx===S.pg)return;
+  autoSave(); // ← save current page content before navigating away
   const dir=idx>S.pg?'forward':'back';
   S.pg=idx;
   animatePageTurn(dir,()=>renderPage());
